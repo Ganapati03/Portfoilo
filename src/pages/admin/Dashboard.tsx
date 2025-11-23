@@ -1,15 +1,21 @@
 import { motion } from "framer-motion";
-import { FolderKanban, Award, Lightbulb, MessageSquare } from "lucide-react";
+import { FolderKanban, Award, Lightbulb, MessageSquare, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-
-const stats = [
-  { title: "Total Projects", value: "12", icon: FolderKanban, color: "text-primary" },
-  { title: "Certifications", value: "8", icon: Award, color: "text-secondary" },
-  { title: "Skills", value: "24", icon: Lightbulb, color: "text-primary" },
-  { title: "Messages", value: "45", icon: MessageSquare, color: "text-secondary" },
-];
+import { useProjects, useCertifications, useSkills, useMessages } from "@/integrations/supabase/hooks";
 
 const Dashboard = () => {
+  const { data: projects, isLoading: loadingProjects } = useProjects();
+  const { data: certifications, isLoading: loadingCerts } = useCertifications();
+  const { data: skills, isLoading: loadingSkills } = useSkills();
+  const { data: messages, isLoading: loadingMessages } = useMessages();
+
+  const stats = [
+    { title: "Total Projects", value: projects?.length || 0, icon: FolderKanban, color: "text-primary", loading: loadingProjects },
+    { title: "Certifications", value: certifications?.length || 0, icon: Award, color: "text-secondary", loading: loadingCerts },
+    { title: "Skills", value: skills?.length || 0, icon: Lightbulb, color: "text-primary", loading: loadingSkills },
+    { title: "Messages", value: messages?.length || 0, icon: MessageSquare, color: "text-secondary", loading: loadingMessages },
+  ];
+
   return (
     <div className="p-8">
       <motion.div
@@ -33,7 +39,9 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-foreground/60 mb-1">{stat.title}</p>
-                  <p className="text-3xl font-bold">{stat.value}</p>
+                  <p className="text-3xl font-bold">
+                    {stat.loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stat.value}
+                  </p>
                 </div>
                 <div className={`p-4 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20`}>
                   <stat.icon className={`w-6 h-6 ${stat.color}`} />

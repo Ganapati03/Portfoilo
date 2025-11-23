@@ -1,35 +1,19 @@
 import { motion } from "framer-motion";
-import { ExternalLink, Github } from "lucide-react";
+import { ExternalLink, Github, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const projects = [
-  {
-    title: "E-Commerce Platform",
-    description: "Full-stack e-commerce solution with payment integration, admin dashboard, and real-time inventory management.",
-    image: "https://images.unsplash.com/photo-1557821552-17105176677c?w=800&auto=format&fit=crop&q=60",
-    tech: ["React", "Node.js", "MongoDB", "Stripe"],
-    live: "#",
-    github: "#",
-  },
-  {
-    title: "AI Chat Application",
-    description: "Real-time chat app with AI-powered responses, message translation, and sentiment analysis.",
-    image: "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=800&auto=format&fit=crop&q=60",
-    tech: ["Next.js", "OpenAI", "WebSocket", "PostgreSQL"],
-    live: "#",
-    github: "#",
-  },
-  {
-    title: "Task Management System",
-    description: "Collaborative project management tool with kanban boards, time tracking, and team analytics.",
-    image: "https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=800&auto=format&fit=crop&q=60",
-    tech: ["React", "TypeScript", "Firebase", "Tailwind"],
-    live: "#",
-    github: "#",
-  },
-];
+import { useProjects } from "@/integrations/supabase/hooks";
 
 export const Projects = () => {
+  const { data: projects, isLoading } = useProjects();
+
+  if (isLoading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <section id="projects" className="py-20 relative">
       <div className="container mx-auto px-4">
@@ -45,9 +29,9 @@ export const Projects = () => {
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, index) => (
+          {projects?.map((project, index) => (
             <motion.div
-              key={project.title}
+              key={project.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -55,12 +39,18 @@ export const Projects = () => {
               whileHover={{ y: -10, rotateX: 5 }}
               className="glass-strong rounded-2xl overflow-hidden border border-primary/20 glow-hover-cyan group"
             >
-              <div className="relative overflow-hidden">
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                />
+              <div className="relative overflow-hidden h-48">
+                {project.image_url ? (
+                  <img
+                    src={project.image_url}
+                    alt={project.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-foreground/50">No Image</span>
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60" />
               </div>
               
@@ -73,7 +63,7 @@ export const Projects = () => {
                 </p>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {project.tech.map((tech) => (
+                  {project.tags?.map((tech) => (
                     <span
                       key={tech}
                       className="px-3 py-1 text-xs rounded-full glass border border-primary/30"
@@ -84,26 +74,41 @@ export const Projects = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 rounded-xl border-primary/50 hover:glow-cyan"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Live Demo
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 rounded-xl border-secondary/50 hover:glow-purple"
-                  >
-                    <Github className="w-4 h-4 mr-2" />
-                    GitHub
-                  </Button>
+                  {project.demo_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 rounded-xl border-primary/50 hover:glow-cyan"
+                      asChild
+                    >
+                      <a href={project.demo_url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Live Demo
+                      </a>
+                    </Button>
+                  )}
+                  {project.github_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 rounded-xl border-secondary/50 hover:glow-purple"
+                      asChild
+                    >
+                      <a href={project.github_url} target="_blank" rel="noopener noreferrer">
+                        <Github className="w-4 h-4 mr-2" />
+                        GitHub
+                      </a>
+                    </Button>
+                  )}
                 </div>
               </div>
             </motion.div>
           ))}
+          {projects?.length === 0 && (
+            <div className="col-span-full text-center text-foreground/50">
+              No projects to display.
+            </div>
+          )}
         </div>
       </div>
     </section>

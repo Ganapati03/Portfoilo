@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, Briefcase, Trophy } from "lucide-react";
+import { Plus, Pencil, Trash2, Briefcase, Trophy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -19,32 +19,75 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const experiences = [
-  {
-    id: 1,
-    title: "Senior Full Stack Developer",
-    company: "Tech Corp",
-    period: "2022 - Present",
-    type: "work",
-  },
-  {
-    id: 2,
-    title: "Won AI Hackathon",
-    company: "TechFest 2023",
-    period: "Nov 2023",
-    type: "hackathon",
-  },
-  {
-    id: 3,
-    title: "Full Stack Developer",
-    company: "StartupXYZ",
-    period: "2020 - 2022",
-    type: "work",
-  },
-];
+import { useExperience, useAddExperience, useDeleteExperience } from "@/integrations/supabase/hooks";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const ExperiencePage = () => {
+  const { data: experiences, isLoading } = useExperience();
+  const addExperience = useAddExperience();
+  const deleteExperience = useDeleteExperience();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newExperience, setNewExperience] = useState({
+    company: "",
+    position: "",
+    start_date: "",
+    end_date: "",
+    description: "",
+    current: false,
+  });
+
+  const handleAddExperience = () => {
+    if (!newExperience.company || !newExperience.position) {
+      toast.error("Company and Position are required");
+      return;
+    }
+
+    addExperience.mutate({
+      ...newExperience,
+      // Ensure dates are in correct format or null if empty
+      start_date: newExperience.start_date || null,
+      end_date: newExperience.end_date || null,
+    }, {
+      onSuccess: () => {
+        toast.success("Experience added successfully");
+        setIsDialogOpen(false);
+        setNewExperience({
+          company: "",
+          position: "",
+          start_date: "",
+          end_date: "",
+          description: "",
+          current: false,
+        });
+      },
+      onError: (error) => {
+        toast.error(`Error adding experience: ${error.message}`);
+      }
+    });
+  };
+
+  const handleDeleteExperience = (id: string) => {
+    if (confirm("Are you sure you want to delete this experience?")) {
+      deleteExperience.mutate(id, {
+        onSuccess: () => {
+          toast.success("Experience deleted successfully");
+        },
+        onError: (error) => {
+          toast.error(`Error deleting experience: ${error.message}`);
+        }
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <motion.div
@@ -57,7 +100,7 @@ const ExperiencePage = () => {
           <p className="text-foreground/60">Manage your work experience and achievements</p>
         </div>
         
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
               <Plus className="w-4 h-4 mr-2" />
@@ -69,23 +112,15 @@ const ExperiencePage = () => {
               <DialogTitle className="gradient-text">Add New Experience</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>Type</Label>
-                <Select>
-                  <SelectTrigger className="glass border-primary/30 rounded-xl mt-1">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent className="glass-strong border-primary/20">
-                    <SelectItem value="work">Work Experience</SelectItem>
-                    <SelectItem value="hackathon">Hackathon</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Type selection removed as it's not in the schema, defaulting to work experience style */}
+              
               <div>
                 <Label>Title/Position</Label>
                 <Input 
                   placeholder="e.g., Senior Developer" 
                   className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newExperience.position}
+                  onChange={(e) => setNewExperience({ ...newExperience, position: e.target.value })}
                 />
               </div>
               <div>
@@ -93,14 +128,29 @@ const ExperiencePage = () => {
                 <Input 
                   placeholder="e.g., Tech Corp" 
                   className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newExperience.company}
+                  onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>Period</Label>
-                <Input 
-                  placeholder="e.g., 2022 - Present" 
-                  className="glass border-primary/30 rounded-xl mt-1" 
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Start Date</Label>
+                  <Input 
+                    type="date"
+                    className="glass border-primary/30 rounded-xl mt-1" 
+                    value={newExperience.start_date}
+                    onChange={(e) => setNewExperience({ ...newExperience, start_date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>End Date</Label>
+                  <Input 
+                    type="date"
+                    className="glass border-primary/30 rounded-xl mt-1" 
+                    value={newExperience.end_date}
+                    onChange={(e) => setNewExperience({ ...newExperience, end_date: e.target.value })}
+                  />
+                </div>
               </div>
               <div>
                 <Label>Description</Label>
@@ -108,9 +158,16 @@ const ExperiencePage = () => {
                   placeholder="Brief description"
                   rows={3}
                   className="glass border-primary/30 rounded-xl mt-1 resize-none"
+                  value={newExperience.description}
+                  onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
                 />
               </div>
-              <Button className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary">
+              <Button 
+                className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
+                onClick={handleAddExperience}
+                disabled={addExperience.isPending}
+              >
+                {addExperience.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Add Experience
               </Button>
             </div>
@@ -119,27 +176,21 @@ const ExperiencePage = () => {
       </motion.div>
 
       <div className="space-y-4 max-w-4xl">
-        {experiences.map((exp) => (
+        {experiences?.map((exp) => (
           <Card key={exp.id} className="glass-strong p-6 border border-primary/20 hover:glow-cyan transition-all">
             <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-xl ${
-                exp.type === "hackathon" 
-                  ? "bg-secondary/20" 
-                  : "bg-primary/20"
-              }`}>
-                {exp.type === "hackathon" ? (
-                  <Trophy className="w-6 h-6 text-secondary" />
-                ) : (
-                  <Briefcase className="w-6 h-6 text-primary" />
-                )}
+              <div className="p-3 rounded-xl bg-primary/20">
+                <Briefcase className="w-6 h-6 text-primary" />
               </div>
               
               <div className="flex-1">
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div>
-                    <h3 className="text-xl font-bold">{exp.title}</h3>
+                    <h3 className="text-xl font-bold">{exp.position}</h3>
                     <p className="text-sm text-primary">{exp.company}</p>
-                    <p className="text-xs text-foreground/50 mt-1">{exp.period}</p>
+                    <p className="text-xs text-foreground/50 mt-1">
+                      {exp.start_date} - {exp.current ? "Present" : exp.end_date}
+                    </p>
                   </div>
                   
                   <div className="flex gap-2">
@@ -154,15 +205,22 @@ const ExperiencePage = () => {
                       size="sm" 
                       variant="outline" 
                       className="rounded-xl border-destructive/50 hover:bg-destructive/10"
+                      onClick={() => handleDeleteExperience(exp.id)}
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 </div>
+                <p className="text-sm text-foreground/70 mt-2">{exp.description}</p>
               </div>
             </div>
           </Card>
         ))}
+        {experiences?.length === 0 && (
+          <div className="text-center py-12 text-foreground/50">
+            No experience records found. Add your work history!
+          </div>
+        )}
       </div>
     </div>
   );

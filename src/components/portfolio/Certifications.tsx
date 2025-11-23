@@ -1,35 +1,19 @@
 import { motion } from "framer-motion";
-import { Award, ExternalLink } from "lucide-react";
+import { Award, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const certifications = [
-  {
-    title: "AWS Certified Solutions Architect",
-    issuer: "Amazon Web Services",
-    date: "2023",
-    logo: "https://api.dicebear.com/7.x/shapes/svg?seed=aws",
-  },
-  {
-    title: "Professional Scrum Master I",
-    issuer: "Scrum.org",
-    date: "2023",
-    logo: "https://api.dicebear.com/7.x/shapes/svg?seed=scrum",
-  },
-  {
-    title: "Google Cloud Professional",
-    issuer: "Google Cloud",
-    date: "2022",
-    logo: "https://api.dicebear.com/7.x/shapes/svg?seed=gcp",
-  },
-  {
-    title: "Meta Front-End Developer",
-    issuer: "Meta",
-    date: "2022",
-    logo: "https://api.dicebear.com/7.x/shapes/svg?seed=meta",
-  },
-];
+import { useCertifications } from "@/integrations/supabase/hooks";
 
 export const Certifications = () => {
+  const { data: certifications, isLoading } = useCertifications();
+
+  if (isLoading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <section id="certifications" className="py-20 relative">
       <div className="container mx-auto px-4">
@@ -45,9 +29,9 @@ export const Certifications = () => {
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {certifications.map((cert, index) => (
+          {certifications?.map((cert, index) => (
             <motion.div
-              key={cert.title}
+              key={cert.id}
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -63,21 +47,31 @@ export const Certifications = () => {
               </div>
 
               <h3 className="font-bold mb-2 text-sm group-hover:gradient-text transition-all">
-                {cert.title}
+                {cert.name}
               </h3>
               <p className="text-xs text-foreground/60 mb-1">{cert.issuer}</p>
-              <p className="text-xs text-foreground/40 mb-4">{cert.date}</p>
+              <p className="text-xs text-foreground/40 mb-4">{cert.issue_date}</p>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full rounded-xl border-primary/50 hover:glow-cyan text-xs"
-              >
-                <ExternalLink className="w-3 h-3 mr-2" />
-                View Credential
-              </Button>
+              {cert.credential_url && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full rounded-xl border-primary/50 hover:glow-cyan text-xs"
+                  asChild
+                >
+                  <a href={cert.credential_url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-3 h-3 mr-2" />
+                    View Credential
+                  </a>
+                </Button>
+              )}
             </motion.div>
           ))}
+          {certifications?.length === 0 && (
+            <div className="col-span-full text-center text-foreground/50">
+              No certifications to display.
+            </div>
+          )}
         </div>
       </div>
     </section>

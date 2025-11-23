@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -19,17 +19,55 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const skills = [
-  { id: 1, name: "React", category: "Frontend" },
-  { id: 2, name: "TypeScript", category: "Frontend" },
-  { id: 3, name: "Node.js", category: "Backend" },
-  { id: 4, name: "PostgreSQL", category: "Backend" },
-  { id: 5, name: "Figma", category: "Design" },
-  { id: 6, name: "Docker", category: "Tools" },
-];
+import { useSkills, useAddSkill, useDeleteSkill } from "@/integrations/supabase/hooks";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const SkillsPage = () => {
+  const { data: skills, isLoading } = useSkills();
+  const addSkill = useAddSkill();
+  const deleteSkill = useDeleteSkill();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newSkill, setNewSkill] = useState({ name: "", category: "" });
+
+  const handleAddSkill = () => {
+    if (!newSkill.name || !newSkill.category) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    addSkill.mutate(newSkill, {
+      onSuccess: () => {
+        toast.success("Skill added successfully");
+        setIsDialogOpen(false);
+        setNewSkill({ name: "", category: "" });
+      },
+      onError: (error) => {
+        toast.error(`Error adding skill: ${error.message}`);
+      }
+    });
+  };
+
+  const handleDeleteSkill = (id: string) => {
+    if (confirm("Are you sure you want to delete this skill?")) {
+      deleteSkill.mutate(id, {
+        onSuccess: () => {
+          toast.success("Skill deleted successfully");
+        },
+        onError: (error) => {
+          toast.error(`Error deleting skill: ${error.message}`);
+        }
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <motion.div
@@ -42,7 +80,7 @@ const SkillsPage = () => {
           <p className="text-foreground/60">Manage your skills and expertise</p>
         </div>
         
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
               <Plus className="w-4 h-4 mr-2" />
@@ -56,13 +94,28 @@ const SkillsPage = () => {
             <div className="space-y-4">
               <div>
                 <Label>Skill Name</Label>
-                <Input placeholder="e.g., React" className="glass border-primary/30 rounded-xl mt-1" />
+                <Input 
+                  placeholder="e.g., React" 
+                  className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newSkill.name}
+                  onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
+                />
               </div>
               <div>
                 <Label>Category</Label>
-                <Input placeholder="e.g., Frontend" className="glass border-primary/30 rounded-xl mt-1" />
+                <Input 
+                  placeholder="e.g., Frontend" 
+                  className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newSkill.category}
+                  onChange={(e) => setNewSkill({ ...newSkill, category: e.target.value })}
+                />
               </div>
-              <Button className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary">
+              <Button 
+                className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
+                onClick={handleAddSkill}
+                disabled={addSkill.isPending}
+              >
+                {addSkill.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Add Skill
               </Button>
             </div>
@@ -80,7 +133,7 @@ const SkillsPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {skills.map((skill) => (
+            {skills?.map((skill) => (
               <TableRow key={skill.id} className="border-primary/10 hover:bg-primary/5">
                 <TableCell className="font-medium">{skill.name}</TableCell>
                 <TableCell>
@@ -94,6 +147,7 @@ const SkillsPage = () => {
                       size="sm"
                       variant="outline"
                       className="rounded-xl border-primary/50 hover:glow-cyan"
+                      // Add edit functionality later if needed
                     >
                       <Pencil className="w-3 h-3" />
                     </Button>
@@ -101,6 +155,7 @@ const SkillsPage = () => {
                       size="sm"
                       variant="outline"
                       className="rounded-xl border-destructive/50 hover:bg-destructive/10"
+                      onClick={() => handleDeleteSkill(skill.id)}
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
@@ -108,6 +163,13 @@ const SkillsPage = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {skills?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center py-8 text-foreground/50">
+                  No skills found. Add some skills to get started.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </Card>

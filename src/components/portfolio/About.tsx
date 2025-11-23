@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
+import { useProfile } from "@/integrations/supabase/hooks";
 
 export const About = () => {
+  const { data: profile } = useProfile();
+
   return (
     <section id="about" className="py-20 relative">
       <div className="container mx-auto px-4">
@@ -27,9 +30,9 @@ export const About = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 rounded-3xl blur-2xl" />
               <div className="relative glass-strong p-8 rounded-3xl glow-hover-cyan">
                 <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=JohnAbout"
+                  src={profile?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=JohnAbout"}
                   alt="About"
-                  className="w-full max-w-sm rounded-2xl"
+                  className="w-full max-w-sm rounded-2xl object-cover"
                 />
               </div>
             </div>
@@ -45,12 +48,14 @@ export const About = () => {
             <h3 className="text-3xl font-bold text-foreground">
               Passionate Developer Building Digital Experiences
             </h3>
-            <p className="text-foreground/70 leading-relaxed">
-              I'm a full-stack developer with a passion for creating beautiful, functional, and user-friendly applications. With expertise in modern web technologies, I transform ideas into elegant solutions.
+            <p className="text-foreground/70 leading-relaxed whitespace-pre-wrap">
+              {profile?.bio || "I'm a full-stack developer with a passion for creating beautiful, functional, and user-friendly applications. With expertise in modern web technologies, I transform ideas into elegant solutions."}
             </p>
+            {/* 
             <p className="text-foreground/70 leading-relaxed">
               My journey in tech has been driven by curiosity and a desire to continuously learn and improve. I specialize in React, Node.js, and cloud technologies, always staying up-to-date with the latest industry trends.
-            </p>
+            </p> 
+            */}
             <div className="grid grid-cols-2 gap-4 pt-4">
               <div className="glass p-4 rounded-xl border border-primary/20">
                 <div className="text-3xl font-bold gradient-text">5+</div>

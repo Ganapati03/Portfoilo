@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, Award } from "lucide-react";
+import { Plus, Pencil, Trash2, Award, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -11,15 +11,69 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const certifications = [
-  { id: 1, title: "AWS Certified Solutions Architect", issuer: "Amazon Web Services", date: "2023" },
-  { id: 2, title: "Professional Scrum Master I", issuer: "Scrum.org", date: "2023" },
-  { id: 3, title: "Google Cloud Professional", issuer: "Google Cloud", date: "2022" },
-  { id: 4, title: "Meta Front-End Developer", issuer: "Meta", date: "2022" },
-];
+import { useCertifications, useAddCertification, useDeleteCertification } from "@/integrations/supabase/hooks";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const CertificationsPage = () => {
+  const { data: certifications, isLoading } = useCertifications();
+  const addCertification = useAddCertification();
+  const deleteCertification = useDeleteCertification();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newCert, setNewCert] = useState({
+    name: "",
+    issuer: "",
+    issue_date: "",
+    credential_url: "",
+  });
+
+  const handleAddCertification = () => {
+    if (!newCert.name || !newCert.issuer) {
+      toast.error("Name and Issuer are required");
+      return;
+    }
+
+    addCertification.mutate({
+      ...newCert,
+      issue_date: newCert.issue_date || null,
+    }, {
+      onSuccess: () => {
+        toast.success("Certification added successfully");
+        setIsDialogOpen(false);
+        setNewCert({
+          name: "",
+          issuer: "",
+          issue_date: "",
+          credential_url: "",
+        });
+      },
+      onError: (error) => {
+        toast.error(`Error adding certification: ${error.message}`);
+      }
+    });
+  };
+
+  const handleDeleteCertification = (id: string) => {
+    if (confirm("Are you sure you want to delete this certification?")) {
+      deleteCertification.mutate(id, {
+        onSuccess: () => {
+          toast.success("Certification deleted successfully");
+        },
+        onError: (error) => {
+          toast.error(`Error deleting certification: ${error.message}`);
+        }
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <motion.div
@@ -32,7 +86,7 @@ const CertificationsPage = () => {
           <p className="text-foreground/60">Manage your certifications and credentials</p>
         </div>
         
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
               <Plus className="w-4 h-4 mr-2" />
@@ -49,6 +103,8 @@ const CertificationsPage = () => {
                 <Input 
                   placeholder="e.g., AWS Certified Solutions Architect" 
                   className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newCert.name}
+                  onChange={(e) => setNewCert({ ...newCert, name: e.target.value })}
                 />
               </div>
               <div>
@@ -56,13 +112,17 @@ const CertificationsPage = () => {
                 <Input 
                   placeholder="e.g., Amazon Web Services" 
                   className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newCert.issuer}
+                  onChange={(e) => setNewCert({ ...newCert, issuer: e.target.value })}
                 />
               </div>
               <div>
                 <Label>Issue Date</Label>
                 <Input 
-                  placeholder="e.g., 2023" 
+                  type="date"
                   className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newCert.issue_date}
+                  onChange={(e) => setNewCert({ ...newCert, issue_date: e.target.value })}
                 />
               </div>
               <div>
@@ -70,9 +130,16 @@ const CertificationsPage = () => {
                 <Input 
                   placeholder="https://..." 
                   className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newCert.credential_url}
+                  onChange={(e) => setNewCert({ ...newCert, credential_url: e.target.value })}
                 />
               </div>
-              <Button className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary">
+              <Button 
+                className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
+                onClick={handleAddCertification}
+                disabled={addCertification.isPending}
+              >
+                {addCertification.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Add Certification
               </Button>
             </div>
@@ -81,16 +148,16 @@ const CertificationsPage = () => {
       </motion.div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {certifications.map((cert) => (
+        {certifications?.map((cert) => (
           <Card key={cert.id} className="glass-strong p-6 border border-primary/20 hover:glow-cyan transition-all">
             <div className="flex items-start gap-4 mb-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20">
                 <Award className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-bold mb-1 line-clamp-2">{cert.title}</h3>
+                <h3 className="font-bold mb-1 line-clamp-2">{cert.name}</h3>
                 <p className="text-sm text-foreground/60">{cert.issuer}</p>
-                <p className="text-xs text-foreground/40 mt-1">{cert.date}</p>
+                <p className="text-xs text-foreground/40 mt-1">{cert.issue_date}</p>
               </div>
             </div>
             
@@ -107,12 +174,18 @@ const CertificationsPage = () => {
                 size="sm" 
                 variant="outline" 
                 className="rounded-xl border-destructive/50 hover:bg-destructive/10"
+                onClick={() => handleDeleteCertification(cert.id)}
               >
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>
           </Card>
         ))}
+        {certifications?.length === 0 && (
+          <div className="col-span-full text-center py-12 text-foreground/50">
+            No certifications found. Add your credentials!
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAIKnowledge } from "@/integrations/supabase/hooks";
 
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,19 +12,44 @@ export const ChatWidget = () => {
     { text: "Hi! How can I help you today?", isBot: true },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  
+  const { data: knowledgeBase } = useAIKnowledge();
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
     
-    setMessages([...messages, { text: inputValue, isBot: false }]);
+    const userMessage = inputValue.trim();
+    setMessages((prev) => [...prev, { text: userMessage, isBot: false }]);
     setInputValue("");
+    setIsTyping(true);
     
-    // Simulate bot response
+    // Simple keyword matching logic
     setTimeout(() => {
+      let botResponse = "I'm not sure about that. Please contact me directly for more details.";
+      
+      if (knowledgeBase) {
+        const lowerMsg = userMessage.toLowerCase();
+        const match = knowledgeBase.find(item => 
+          lowerMsg.includes(item.topic.toLowerCase()) || 
+          item.topic.toLowerCase().includes(lowerMsg)
+        );
+        
+        if (match) {
+          botResponse = match.description;
+        } else {
+            // Fallback for common greetings if not in DB
+            if (lowerMsg.includes("hello") || lowerMsg.includes("hi")) {
+                botResponse = "Hello! Feel free to ask me about my skills, experience, or projects.";
+            }
+        }
+      }
+
       setMessages((prev) => [
         ...prev,
-        { text: "Thanks for your message! This is a UI demo.", isBot: true },
+        { text: botResponse, isBot: true },
       ]);
+      setIsTyping(false);
     }, 1000);
   };
 
@@ -80,31 +106,33 @@ export const ChatWidget = () => {
                   ))}
                   
                   {/* Typing indicator */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex justify-start"
-                  >
-                    <div className="glass border border-primary/20 p-3 rounded-2xl">
-                      <div className="flex gap-1">
-                        <motion.div
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-                          className="w-2 h-2 rounded-full bg-primary"
-                        />
-                        <motion.div
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-                          className="w-2 h-2 rounded-full bg-primary"
-                        />
-                        <motion.div
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-                          className="w-2 h-2 rounded-full bg-primary"
-                        />
+                  {isTyping && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex justify-start"
+                    >
+                      <div className="glass border border-primary/20 p-3 rounded-2xl">
+                        <div className="flex gap-1">
+                          <motion.div
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                            className="w-2 h-2 rounded-full bg-primary"
+                          />
+                          <motion.div
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                            className="w-2 h-2 rounded-full bg-primary"
+                          />
+                          <motion.div
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                            className="w-2 h-2 rounded-full bg-primary"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  )}
                 </div>
               </ScrollArea>
 

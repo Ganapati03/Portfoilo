@@ -1,10 +1,39 @@
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useProfile, useSendMessage } from "@/integrations/supabase/hooks";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const Contact = () => {
+  const { data: profile } = useProfile();
+  const sendMessage = useSendMessage();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    sendMessage.mutate(formData, {
+      onSuccess: () => {
+        toast.success("Message sent successfully!");
+        setFormData({ name: "", email: "", message: "" });
+      },
+      onError: (error) => {
+        toast.error(`Error sending message: ${error.message}`);
+      }
+    });
+  };
+
   return (
     <section id="contact" className="py-20 relative">
       <div className="container mx-auto px-4">
@@ -39,10 +68,11 @@ export const Contact = () => {
                 </div>
                 <div>
                   <div className="text-sm text-foreground/50">Email</div>
-                  <div className="font-medium">john.doe@example.com</div>
+                  <div className="font-medium">{profile?.email || "john.doe@example.com"}</div>
                 </div>
               </div>
 
+              {/* 
               <div className="flex items-center gap-4 glass p-4 rounded-xl border border-secondary/20">
                 <div className="p-3 rounded-lg bg-secondary/20">
                   <Phone className="w-5 h-5 text-secondary" />
@@ -61,7 +91,8 @@ export const Contact = () => {
                   <div className="text-sm text-foreground/50">Location</div>
                   <div className="font-medium">San Francisco, CA</div>
                 </div>
-              </div>
+              </div> 
+              */}
             </div>
           </motion.div>
 
@@ -71,11 +102,13 @@ export const Contact = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <form className="glass-strong p-6 rounded-2xl border border-primary/20 space-y-4">
+            <form onSubmit={handleSubmit} className="glass-strong p-6 rounded-2xl border border-primary/20 space-y-4">
               <div>
                 <Input
                   placeholder="Your Name"
                   className="glass border-primary/30 rounded-xl"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div>
@@ -83,6 +116,8 @@ export const Contact = () => {
                   type="email"
                   placeholder="Your Email"
                   className="glass border-primary/30 rounded-xl"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
               <div>
@@ -90,12 +125,16 @@ export const Contact = () => {
                   placeholder="Your Message"
                   rows={5}
                   className="glass border-primary/30 rounded-xl resize-none"
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 />
               </div>
               <Button
                 type="submit"
                 className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+                disabled={sendMessage.isPending}
               >
+                {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Send Message
               </Button>
             </form>

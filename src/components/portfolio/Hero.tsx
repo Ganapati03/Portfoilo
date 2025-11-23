@@ -1,11 +1,22 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, Loader2 } from "lucide-react";
+import { useProfile } from "@/integrations/supabase/hooks";
 
 export const Hero = () => {
+  const { data: profile, isLoading } = useProfile();
+
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden">
@@ -40,9 +51,9 @@ export const Hero = () => {
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-2xl opacity-50 animate-glow-pulse" />
               <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+                src={profile?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"}
                 alt="Profile"
-                className="relative w-32 h-32 rounded-full border-4 border-primary/50 glow-cyan"
+                className="relative w-32 h-32 rounded-full border-4 border-primary/50 glow-cyan object-cover"
               />
             </div>
           </motion.div>
@@ -53,7 +64,7 @@ export const Hero = () => {
             transition={{ delay: 0.2, duration: 0.6 }}
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-4">
-              Hi, I'm <span className="gradient-text">John Doe</span>
+              Hi, I'm <span className="gradient-text">{profile?.full_name || "John Doe"}</span>
             </h1>
           </motion.div>
 
@@ -63,7 +74,7 @@ export const Hero = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="text-xl md:text-2xl text-foreground/70 mb-8 max-w-2xl mx-auto"
           >
-            Full Stack Developer • UI/UX Enthusiast • Problem Solver
+            {profile?.title || "Full Stack Developer • UI/UX Enthusiast • Problem Solver"}
           </motion.p>
 
           <motion.div

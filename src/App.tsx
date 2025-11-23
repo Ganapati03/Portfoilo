@@ -15,6 +15,7 @@ import ExperiencePage from "./pages/admin/ExperiencePage";
 import AIKnowledgePage from "./pages/admin/AIKnowledgePage";
 import MessagesPage from "./pages/admin/MessagesPage";
 import SettingsPage from "./pages/admin/SettingsPage";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Portfolio />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />}>
             <Route index element={<Dashboard />} />
             <Route path="hero" element={<HeroPage />} />

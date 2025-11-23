@@ -1,12 +1,64 @@
 import { motion } from "framer-motion";
-import { Save, Github, Linkedin, Twitter, Mail as MailIcon } from "lucide-react";
+import { Save, Github, Linkedin, Twitter, Mail as MailIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useProfile, useUpdateProfile } from "@/integrations/supabase/hooks";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 const SettingsPage = () => {
+  const { data: profile, isLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
+  
+  const [formData, setFormData] = useState({
+    email: "",
+    github_url: "",
+    linkedin_url: "",
+    twitter_url: "",
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        email: profile.email || "",
+        github_url: profile.github_url || "",
+        linkedin_url: profile.linkedin_url || "",
+        twitter_url: profile.twitter_url || "",
+      });
+    }
+  }, [profile]);
+
+  const handleSave = () => {
+    if (!profile) return;
+
+    updateProfile.mutate({
+      ...profile,
+      email: formData.email,
+      github_url: formData.github_url,
+      linkedin_url: formData.linkedin_url,
+      twitter_url: formData.twitter_url,
+      updated_at: new Date().toISOString(),
+    }, {
+      onSuccess: () => {
+        toast.success("Settings updated successfully");
+      },
+      onError: (error) => {
+        toast.error(`Error updating settings: ${error.message}`);
+      }
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <motion.div
@@ -27,22 +79,26 @@ const SettingsPage = () => {
               <Label>Email Address</Label>
               <Input 
                 type="email"
-                defaultValue="john.doe@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="glass border-primary/30 rounded-xl mt-1"
               />
             </div>
+            {/* Phone and Location are not in the schema yet */}
             <div>
-              <Label>Phone Number</Label>
+              <Label>Phone Number (Not persisted)</Label>
               <Input 
                 defaultValue="+1 (555) 123-4567"
                 className="glass border-primary/30 rounded-xl mt-1"
+                disabled
               />
             </div>
             <div>
-              <Label>Location</Label>
+              <Label>Location (Not persisted)</Label>
               <Input 
                 defaultValue="San Francisco, CA"
                 className="glass border-primary/30 rounded-xl mt-1"
+                disabled
               />
             </div>
           </div>
@@ -59,6 +115,8 @@ const SettingsPage = () => {
               </Label>
               <Input 
                 placeholder="https://github.com/username"
+                value={formData.github_url}
+                onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
                 className="glass border-primary/30 rounded-xl mt-1"
               />
             </div>
@@ -69,6 +127,8 @@ const SettingsPage = () => {
               </Label>
               <Input 
                 placeholder="https://linkedin.com/in/username"
+                value={formData.linkedin_url}
+                onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
                 className="glass border-primary/30 rounded-xl mt-1"
               />
             </div>
@@ -79,15 +139,17 @@ const SettingsPage = () => {
               </Label>
               <Input 
                 placeholder="https://twitter.com/username"
+                value={formData.twitter_url}
+                onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
                 className="glass border-primary/30 rounded-xl mt-1"
               />
             </div>
           </div>
         </Card>
 
-        {/* Features */}
-        <Card className="glass-strong p-6 border border-primary/20">
-          <h3 className="text-xl font-bold mb-6">Features</h3>
+        {/* Features - UI Only for now */}
+        <Card className="glass-strong p-6 border border-primary/20 opacity-50 pointer-events-none">
+          <h3 className="text-xl font-bold mb-6">Features (Coming Soon)</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -113,9 +175,9 @@ const SettingsPage = () => {
           </div>
         </Card>
 
-        {/* SEO */}
-        <Card className="glass-strong p-6 border border-primary/20">
-          <h3 className="text-xl font-bold mb-6">SEO Settings</h3>
+        {/* SEO - UI Only for now */}
+        <Card className="glass-strong p-6 border border-primary/20 opacity-50 pointer-events-none">
+          <h3 className="text-xl font-bold mb-6">SEO Settings (Coming Soon)</h3>
           <div className="space-y-4">
             <div>
               <Label>Meta Title</Label>
@@ -134,8 +196,12 @@ const SettingsPage = () => {
           </div>
         </Card>
 
-        <Button className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
-          <Save className="w-4 h-4 mr-2" />
+        <Button 
+          className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+          onClick={handleSave}
+          disabled={updateProfile.isPending}
+        >
+          {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
           Save All Settings
         </Button>
       </div>

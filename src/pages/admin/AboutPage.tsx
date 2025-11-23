@@ -1,12 +1,58 @@
 import { motion } from "framer-motion";
-import { Pencil } from "lucide-react";
+import { Pencil, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useProfile, useUpdateProfile } from "@/integrations/supabase/hooks";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 const AboutPage = () => {
+  const { data: profile, isLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
+  
+  const [formData, setFormData] = useState({
+    bio: "",
+    avatar_url: "",
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        bio: profile.bio || "",
+        avatar_url: profile.avatar_url || "",
+      });
+    }
+  }, [profile]);
+
+  const handleSave = () => {
+    if (!profile) return;
+
+    updateProfile.mutate({
+      ...profile,
+      bio: formData.bio,
+      avatar_url: formData.avatar_url,
+      updated_at: new Date().toISOString(),
+    }, {
+      onSuccess: () => {
+        toast.success("About section updated successfully");
+      },
+      onError: (error) => {
+        toast.error(`Error updating about section: ${error.message}`);
+      }
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <motion.div
@@ -26,60 +72,35 @@ const AboutPage = () => {
         
         <div className="space-y-4">
           <div>
-            <Label>Heading</Label>
-            <Input 
-              defaultValue="Passionate Developer Building Digital Experiences"
-              className="glass border-primary/30 rounded-xl mt-1"
-            />
-          </div>
-
-          <div>
-            <Label>Description Paragraph 1</Label>
+            <Label>Bio / Description</Label>
             <Textarea 
-              defaultValue="I'm a full-stack developer with a passion for creating beautiful, functional, and user-friendly applications. With expertise in modern web technologies, I transform ideas into elegant solutions."
-              rows={3}
+              value={formData.bio}
+              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              rows={6}
               className="glass border-primary/30 rounded-xl mt-1 resize-none"
+              placeholder="Tell us about yourself..."
             />
+            <p className="text-xs text-foreground/50 mt-1">
+              This text will be displayed in the About section. You can use newlines for paragraphs.
+            </p>
           </div>
 
           <div>
-            <Label>Description Paragraph 2</Label>
-            <Textarea 
-              defaultValue="My journey in tech has been driven by curiosity and a desire to continuously learn and improve. I specialize in React, Node.js, and cloud technologies, always staying up-to-date with the latest industry trends."
-              rows={3}
-              className="glass border-primary/30 rounded-xl mt-1 resize-none"
-            />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label>Years of Experience</Label>
-              <Input 
-                type="number"
-                defaultValue="5"
-                className="glass border-primary/30 rounded-xl mt-1"
-              />
-            </div>
-
-            <div>
-              <Label>Projects Completed</Label>
-              <Input 
-                type="number"
-                defaultValue="50"
-                className="glass border-primary/30 rounded-xl mt-1"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label>About Image URL</Label>
+            <Label>Profile Image URL</Label>
             <Input 
-              defaultValue="https://api.dicebear.com/7.x/avataaars/svg?seed=JohnAbout"
+              value={formData.avatar_url}
+              onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
               className="glass border-primary/30 rounded-xl mt-1"
+              placeholder="https://..."
             />
           </div>
 
-          <Button className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
+          <Button 
+            className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+            onClick={handleSave}
+            disabled={updateProfile.isPending}
+          >
+            {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             Save Changes
           </Button>
         </div>

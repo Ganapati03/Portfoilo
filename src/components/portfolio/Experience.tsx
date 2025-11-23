@@ -1,38 +1,18 @@
 import { motion } from "framer-motion";
-import { Trophy, Calendar } from "lucide-react";
-
-const experiences = [
-  {
-    title: "Senior Full Stack Developer",
-    company: "Tech Corp",
-    period: "2022 - Present",
-    description: "Leading development of cloud-native applications and mentoring junior developers.",
-    type: "work",
-  },
-  {
-    title: "Won AI Hackathon",
-    company: "TechFest 2023",
-    period: "Nov 2023",
-    description: "Built an AI-powered solution that won first place among 200+ participants.",
-    type: "hackathon",
-  },
-  {
-    title: "Full Stack Developer",
-    company: "StartupXYZ",
-    period: "2020 - 2022",
-    description: "Developed scalable web applications using React, Node.js, and AWS.",
-    type: "work",
-  },
-  {
-    title: "DevHacks Winner",
-    company: "Global Hackathon",
-    period: "Jun 2022",
-    description: "Created innovative blockchain-based solution for supply chain management.",
-    type: "hackathon",
-  },
-];
+import { Trophy, Calendar, Loader2 } from "lucide-react";
+import { useExperience } from "@/integrations/supabase/hooks";
 
 export const Experience = () => {
+  const { data: experiences, isLoading } = useExperience();
+
+  if (isLoading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <section id="experience" className="py-20 relative">
       <div className="container mx-auto px-4">
@@ -52,9 +32,9 @@ export const Experience = () => {
           <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-secondary to-primary hidden md:block" />
 
           <div className="space-y-12">
-            {experiences.map((exp, index) => (
+            {experiences?.map((exp, index) => (
               <motion.div
-                key={index}
+                key={exp.id}
                 initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
@@ -69,28 +49,25 @@ export const Experience = () => {
                 <div className={`w-full md:w-[calc(50%-2rem)] ${index % 2 === 0 ? "md:pr-8" : "md:pl-8"}`}>
                   <div className="glass-strong p-6 rounded-2xl border border-primary/20 glow-hover-cyan">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className={`p-2 rounded-lg ${
-                        exp.type === "hackathon"
-                          ? "bg-secondary/20 text-secondary"
-                          : "bg-primary/20 text-primary"
-                      }`}>
-                        {exp.type === "hackathon" ? (
-                          <Trophy className="w-5 h-5" />
-                        ) : (
-                          <Calendar className="w-5 h-5" />
-                        )}
+                      <div className="p-2 rounded-lg bg-primary/20 text-primary">
+                        <Calendar className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-1">{exp.title}</h3>
+                        <h3 className="text-xl font-bold mb-1">{exp.position}</h3>
                         <p className="text-sm text-primary">{exp.company}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-foreground/50 mb-3">{exp.period}</p>
+                    <p className="text-xs text-foreground/50 mb-3">{exp.duration}</p>
                     <p className="text-foreground/70 text-sm">{exp.description}</p>
                   </div>
                 </div>
               </motion.div>
             ))}
+            {experiences?.length === 0 && (
+              <div className="text-center text-foreground/50">
+                No experience added yet.
+              </div>
+            )}
           </div>
         </div>
       </div>

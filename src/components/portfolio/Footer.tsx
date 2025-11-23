@@ -1,12 +1,15 @@
 import { Github, Linkedin, Twitter, Mail } from "lucide-react";
 import { motion } from "framer-motion";
+import { useProfile } from "@/integrations/supabase/hooks";
 
 export const Footer = () => {
+  const { data: profile } = useProfile();
+
   const socials = [
-    { icon: Github, href: "#", label: "GitHub" },
-    { icon: Linkedin, href: "#", label: "LinkedIn" },
-    { icon: Twitter, href: "#", label: "Twitter" },
-    { icon: Mail, href: "#", label: "Email" },
+    { icon: Github, href: profile?.github_url || "#", label: "GitHub" },
+    { icon: Linkedin, href: profile?.linkedin_url || "#", label: "LinkedIn" },
+    { icon: Twitter, href: profile?.twitter_url || "#", label: "Twitter" },
+    { icon: Mail, href: profile?.email ? `mailto:${profile.email}` : "#", label: "Email" },
   ];
 
   return (
@@ -24,6 +27,8 @@ export const Footer = () => {
                 key={social.label}
                 href={social.href}
                 aria-label={social.label}
+                target={social.label !== "Email" ? "_blank" : undefined}
+                rel={social.label !== "Email" ? "noopener noreferrer" : undefined}
                 className="p-3 glass rounded-xl border border-primary/20 hover:glow-cyan transition-all hover:-translate-y-1"
               >
                 <social.icon className="w-5 h-5 text-primary" />
@@ -37,7 +42,7 @@ export const Footer = () => {
             viewport={{ once: true }}
             className="text-center text-sm text-foreground/50"
           >
-            <p>© 2024 John Doe. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {profile?.full_name || "John Doe"}. All rights reserved.</p>
             <p className="mt-2">Built with React, TailwindCSS & Framer Motion</p>
             <a 
               href="/admin" 
