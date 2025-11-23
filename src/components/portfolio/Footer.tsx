@@ -39,6 +39,12 @@ export const Footer = () => {
           >
             <p>© 2024 John Doe. All rights reserved.</p>
             <p className="mt-2">Built with React, TailwindCSS & Framer Motion</p>
+            <a 
+              href="/admin" 
+              className="inline-block mt-3 text-xs text-primary/50 hover:text-primary transition-colors"
+            >
+              Admin Panel
+            </a>
           </motion.div>
         </div>
       </div>
