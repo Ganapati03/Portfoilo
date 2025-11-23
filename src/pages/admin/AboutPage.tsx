@@ -1,22 +1,24 @@
 import { motion } from "framer-motion";
-import { Pencil, Save, Loader2 } from "lucide-react";
+import { Pencil, Save, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useProfile, useUpdateProfile } from "@/integrations/supabase/hooks";
+import { useProfile, useUpdateProfile, useUploadImage } from "@/integrations/supabase/hooks";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 const AboutPage = () => {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
+  const uploadImage = useUploadImage();
   
   const [formData, setFormData] = useState({
     bio: "",
     avatar_url: "",
   });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -26,6 +28,22 @@ const AboutPage = () => {
       });
     }
   }, [profile]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const publicUrl = await uploadImage.mutateAsync({ file, bucket: "portfolio" });
+      setFormData({ ...formData, avatar_url: publicUrl });
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      toast.error(`Error uploading image: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = () => {
     if (!profile) return;
@@ -86,19 +104,34 @@ const AboutPage = () => {
           </div>
 
           <div>
-            <Label>Profile Image URL</Label>
-            <Input 
-              value={formData.avatar_url}
-              onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
-              className="glass border-primary/30 rounded-xl mt-1"
-              placeholder="https://..."
-            />
+            <Label>Profile Image</Label>
+            <div className="flex items-center gap-4 mt-1">
+              {formData.avatar_url && (
+                <img 
+                  src={formData.avatar_url} 
+                  alt="Profile" 
+                  className="w-16 h-16 rounded-full object-cover border border-primary/20"
+                />
+              )}
+              <div className="flex-1">
+                <Input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  className="glass border-primary/30 rounded-xl cursor-pointer"
+                />
+                <p className="text-xs text-foreground/50 mt-1">
+                  {uploading ? "Uploading..." : "Upload a new profile picture. Supported formats: JPG, PNG, WEBP."}
+                </p>
+              </div>
+            </div>
           </div>
 
           <Button 
             className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
             onClick={handleSave}
-            disabled={updateProfile.isPending}
+            disabled={updateProfile.isPending || uploading}
           >
             {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             Save Changes

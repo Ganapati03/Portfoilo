@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCertifications, useAddCertification, useDeleteCertification } from "@/integrations/supabase/hooks";
+import { useCertifications, useAddCertification, useDeleteCertification, useUploadImage } from "@/integrations/supabase/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -19,13 +19,34 @@ const CertificationsPage = () => {
   const { data: certifications, isLoading } = useCertifications();
   const addCertification = useAddCertification();
   const deleteCertification = useDeleteCertification();
+  const uploadImage = useUploadImage();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
   const [newCert, setNewCert] = useState({
     name: "",
     issuer: "",
     issue_date: "",
     credential_url: "",
+    image_url: "",
   });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const publicUrl = await uploadImage.mutateAsync({ file, bucket: "portfolio" });
+      setNewCert({ ...newCert, image_url: publicUrl });
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      toast.error(`Error uploading image: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleAddCertification = () => {
     if (!newCert.name || !newCert.issuer) {
@@ -45,6 +66,7 @@ const CertificationsPage = () => {
           issuer: "",
           issue_date: "",
           credential_url: "",
+          image_url: "",
         });
       },
       onError: (error) => {
@@ -99,7 +121,7 @@ const CertificationsPage = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Certification Title</Label>
+                <Label>Certification Name</Label>
                 <Input 
                   placeholder="e.g., AWS Certified Solutions Architect" 
                   className="glass border-primary/30 rounded-xl mt-1" 
@@ -108,7 +130,7 @@ const CertificationsPage = () => {
                 />
               </div>
               <div>
-                <Label>Issuing Organization</Label>
+                <Label>Issuer</Label>
                 <Input 
                   placeholder="e.g., Amazon Web Services" 
                   className="glass border-primary/30 rounded-xl mt-1" 
@@ -125,6 +147,32 @@ const CertificationsPage = () => {
                   onChange={(e) => setNewCert({ ...newCert, issue_date: e.target.value })}
                 />
               </div>
+              
+              <div>
+                <Label>Certificate Image</Label>
+                <div className="flex items-center gap-4 mt-1">
+                  {newCert.image_url && (
+                    <img 
+                      src={newCert.image_url} 
+                      alt="Preview" 
+                      className="w-16 h-16 rounded-md object-cover border border-primary/20"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      className="glass border-primary/30 cursor-pointer"
+                    />
+                    <p className="text-xs text-foreground/50 mt-1">
+                      {uploading ? "Uploading..." : "Upload certificate image"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <Label>Credential URL</Label>
                 <Input 
@@ -137,7 +185,7 @@ const CertificationsPage = () => {
               <Button 
                 className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
                 onClick={handleAddCertification}
-                disabled={addCertification.isPending}
+                disabled={addCertification.isPending || uploading}
               >
                 {addCertification.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Add Certification

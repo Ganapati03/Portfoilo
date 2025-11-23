@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useProjects, useAddProject, useDeleteProject } from "@/integrations/supabase/hooks";
+import { useProjects, useAddProject, useDeleteProject, useUploadImage } from "@/integrations/supabase/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,7 +20,11 @@ const ProjectsPage = () => {
   const { data: projects, isLoading } = useProjects();
   const addProject = useAddProject();
   const deleteProject = useDeleteProject();
+  const uploadImage = useUploadImage();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  
   const [newProject, setNewProject] = useState({
     title: "",
     description: "",
@@ -29,6 +33,22 @@ const ProjectsPage = () => {
     github_url: "",
     tags: "", // Will be converted to array
   });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const publicUrl = await uploadImage.mutateAsync({ file, bucket: "portfolio" });
+      setNewProject({ ...newProject, image_url: publicUrl });
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      toast.error(`Error uploading image: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleAddProject = () => {
     if (!newProject.title) {
@@ -102,73 +122,93 @@ const ProjectsPage = () => {
           </DialogTrigger>
           <DialogContent className="glass-strong border-primary/20 max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="gradient-text">Add New Project</DialogTitle>
+              <DialogTitle>Add New Project</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-              <div>
-                <Label>Project Title</Label>
-                <Input 
-                  placeholder="e.g., E-Commerce Platform" 
-                  className="glass border-primary/30 rounded-xl mt-1" 
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Project Title</Label>
+                <Input
+                  id="title"
                   value={newProject.title}
                   onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
+                  className="glass border-primary/30"
                 />
               </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea 
-                  placeholder="Brief description of the project"
-                  rows={3}
-                  className="glass border-primary/30 rounded-xl mt-1 resize-none"
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
                   value={newProject.description}
                   onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                  className="glass border-primary/30"
                 />
               </div>
-              <div>
-                <Label>Image URL</Label>
-                <Input 
-                  placeholder="https://..." 
-                  className="glass border-primary/30 rounded-xl mt-1" 
-                  value={newProject.image_url}
-                  onChange={(e) => setNewProject({ ...newProject, image_url: e.target.value })}
-                />
+              
+              <div className="grid gap-2">
+                <Label htmlFor="image">Project Image</Label>
+                <div className="flex items-center gap-4">
+                  {newProject.image_url && (
+                    <img 
+                      src={newProject.image_url} 
+                      alt="Preview" 
+                      className="w-16 h-16 rounded-md object-cover border border-primary/20"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <Input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      className="glass border-primary/30 cursor-pointer"
+                    />
+                    <p className="text-xs text-foreground/50 mt-1">
+                      {uploading ? "Uploading..." : "Upload project screenshot"}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Live Demo URL</Label>
-                  <Input 
-                    placeholder="https://..." 
-                    className="glass border-primary/30 rounded-xl mt-1" 
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="demo">Demo URL</Label>
+                  <Input
+                    id="demo"
                     value={newProject.demo_url}
                     onChange={(e) => setNewProject({ ...newProject, demo_url: e.target.value })}
+                    className="glass border-primary/30"
+                    placeholder="https://..."
                   />
                 </div>
-                <div>
-                  <Label>GitHub URL</Label>
-                  <Input 
-                    placeholder="https://github.com/..." 
-                    className="glass border-primary/30 rounded-xl mt-1" 
+                <div className="grid gap-2">
+                  <Label htmlFor="github">GitHub URL</Label>
+                  <Input
+                    id="github"
                     value={newProject.github_url}
                     onChange={(e) => setNewProject({ ...newProject, github_url: e.target.value })}
+                    className="glass border-primary/30"
+                    placeholder="https://..."
                   />
                 </div>
               </div>
-              <div>
-                <Label>Technologies (comma-separated)</Label>
-                <Input 
-                  placeholder="React, Node.js, MongoDB" 
-                  className="glass border-primary/30 rounded-xl mt-1" 
+              <div className="grid gap-2">
+                <Label htmlFor="tags">Tags (comma separated)</Label>
+                <Input
+                  id="tags"
                   value={newProject.tags}
                   onChange={(e) => setNewProject({ ...newProject, tags: e.target.value })}
+                  className="glass border-primary/30"
+                  placeholder="React, TypeScript, Tailwind..."
                 />
               </div>
               <Button 
-                className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
-                onClick={handleAddProject}
-                disabled={addProject.isPending}
+                onClick={handleAddProject} 
+                className="bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+                disabled={addProject.isPending || uploading}
               >
                 {addProject.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Add Project
+                Save Project
               </Button>
             </div>
           </DialogContent>
