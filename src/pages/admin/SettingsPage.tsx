@@ -18,6 +18,7 @@ const SettingsPage = () => {
     github_url: "",
     linkedin_url: "",
     twitter_url: "",
+    gemini_api_key: "",
   });
 
   useEffect(() => {
@@ -27,6 +28,7 @@ const SettingsPage = () => {
         github_url: profile.github_url || "",
         linkedin_url: profile.linkedin_url || "",
         twitter_url: profile.twitter_url || "",
+        gemini_api_key: profile.gemini_api_key || "",
       });
     }
   }, [profile]);
@@ -40,6 +42,7 @@ const SettingsPage = () => {
       github_url: formData.github_url,
       linkedin_url: formData.linkedin_url,
       twitter_url: formData.twitter_url,
+      gemini_api_key: formData.gemini_api_key,
       updated_at: new Date().toISOString(),
     }, {
       onSuccess: () => {
@@ -143,6 +146,26 @@ const SettingsPage = () => {
                 onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
                 className="glass border-primary/30 rounded-xl mt-1"
               />
+            </div>
+          </div>
+        </Card>
+
+        {/* API Keys */}
+        <Card className="glass-strong p-6 border border-primary/20">
+          <h3 className="text-xl font-bold mb-6">API Configuration</h3>
+          <div className="space-y-4">
+            <div>
+              <Label>Gemini API Key</Label>
+              <Input 
+                type="password"
+                placeholder="AIzaSy..."
+                value={formData.gemini_api_key}
+                onChange={(e) => setFormData({ ...formData, gemini_api_key: e.target.value })}
+                className="glass border-primary/30 rounded-xl mt-1"
+              />
+              <p className="text-xs text-foreground/50 mt-1">
+                Required for the AI Chatbot to function. Keys are stored securely.
+              </p>
             </div>
           </div>
         </Card>

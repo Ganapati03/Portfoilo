@@ -4,7 +4,7 @@ import { MessageCircle, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAIKnowledge } from "@/integrations/supabase/hooks";
+import { useAIKnowledge, useProfile } from "@/integrations/supabase/hooks";
 
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,42 +15,77 @@ export const ChatWidget = () => {
   const [isTyping, setIsTyping] = useState(false);
   
   const { data: knowledgeBase } = useAIKnowledge();
+  const { data: profile } = useProfile();
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim()) return;
     
     const userMessage = inputValue.trim();
     setMessages((prev) => [...prev, { text: userMessage, isBot: false }]);
     setInputValue("");
     setIsTyping(true);
-    
-    // Simple keyword matching logic
-    setTimeout(() => {
-      let botResponse = "I'm not sure about that. Please contact me directly for more details.";
-      
-      if (knowledgeBase) {
-        const lowerMsg = userMessage.toLowerCase();
-        const match = knowledgeBase.find(item => 
-          lowerMsg.includes(item.topic.toLowerCase()) || 
-          item.topic.toLowerCase().includes(lowerMsg)
-        );
-        
-        if (match) {
-          botResponse = match.description;
-        } else {
-            // Fallback for common greetings if not in DB
-            if (lowerMsg.includes("hello") || lowerMsg.includes("hi")) {
-                botResponse = "Hello! Feel free to ask me about my skills, experience, or projects.";
-            }
-        }
+
+    try {
+      if (!profile?.gemini_api_key) {
+        throw new Error("Gemini API key not configured");
       }
+
+      // Construct context from knowledge base
+      const context = knowledgeBase?.map(k => `${k.topic}: ${k.description}`).join("\n") || "";
+      const systemPrompt = `You are an AI assistant for ${profile.full_name}'s portfolio. 
+      Here is some context about ${profile.full_name}:
+      ${context}
+      
+      Answer the user's question based on this context. If the answer isn't in the context, politely say you don't know but suggest contacting ${profile.full_name} directly.
+      Keep answers concise and professional.`;
+
+      console.log("Sending request to Gemini API...");
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${profile.gemini_api_key}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }]
+          }]
+        })
+      });
+
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Response data:", data);
+      
+      if (!response.ok || data.error) {
+        const errorMsg = data.error?.message || `API returned status ${response.status}`;
+        throw new Error(errorMsg);
+      }
+
+      const botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't generate a response.";
 
       setMessages((prev) => [
         ...prev,
         { text: botResponse, isBot: true },
       ]);
+    } catch (error: any) {
+      console.error("Chat error:", error);
+      let errorMessage = "I'm having trouble connecting right now. Please try again later.";
+      
+      if (!profile?.gemini_api_key) {
+        errorMessage = "My AI brain hasn't been configured yet! Please add a Gemini API key in the Admin Settings.";
+      } else if (error.message.includes("API_KEY_INVALID") || error.message.includes("400")) {
+        errorMessage = "The API key seems to be invalid. Please check your Gemini API key in Admin Settings.";
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        { text: errorMessage, isBot: true },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   return (
