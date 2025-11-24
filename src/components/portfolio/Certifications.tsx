@@ -28,7 +28,7 @@ export const Certifications = () => {
           <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {certifications?.map((cert, index) => (
             <motion.div
               key={cert.id}
@@ -39,11 +39,21 @@ export const Certifications = () => {
               whileHover={{ y: -5 }}
               className="glass-strong p-6 rounded-2xl border border-primary/20 glow-hover-cyan text-center group"
             >
-              <div className="relative mx-auto w-20 h-20 mb-4">
+              <div className="relative mx-auto w-32 h-32 mb-4">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative w-full h-full rounded-full border-2 border-primary/30 p-2 glass">
-                  <Award className="w-full h-full text-primary" />
-                </div>
+                {cert.image_url ? (
+                  <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-primary/30">
+                    <img 
+                      src={cert.image_url} 
+                      alt={cert.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="relative w-full h-full rounded-full border-2 border-primary/30 p-2 glass">
+                    <Award className="w-full h-full text-primary" />
+                  </div>
+                )}
               </div>
 
               <h3 className="font-bold mb-2 text-sm group-hover:gradient-text transition-all">
