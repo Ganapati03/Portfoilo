@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, Loader2 } from "lucide-react";
+import { ArrowDown, Loader2, Download } from "lucide-react";
 import { useProfile } from "@/integrations/supabase/hooks";
 
 export const Hero = () => {
@@ -98,6 +98,19 @@ export const Hero = () => {
             >
               Contact Me
             </Button>
+            {profile?.resume_url && (
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 py-6 rounded-2xl border-2 border-primary/50 hover:glow-cyan"
+              >
+                <a href={profile.resume_url} target="_blank" rel="noopener noreferrer">
+                  <Download className="w-5 h-5 mr-2" />
+                  Resume
+                </a>
+              </Button>
+            )}
           </motion.div>
 
           <motion.div

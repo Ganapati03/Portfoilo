@@ -1,8 +1,30 @@
 import { motion } from "framer-motion";
-import { useProfile } from "@/integrations/supabase/hooks";
+import { useProfile, useExperience, useProjects } from "@/integrations/supabase/hooks";
 
 export const About = () => {
   const { data: profile } = useProfile();
+  const { data: experience } = useExperience();
+  const { data: projects } = useProjects();
+
+  const calculateYearsExperience = () => {
+    if (!experience || experience.length === 0) return 0;
+    
+    // Filter out any invalid dates just in case
+    const validDates = experience
+      .filter(exp => exp.start_date)
+      .map(exp => new Date(exp.start_date!).getTime());
+      
+    if (validDates.length === 0) return 0;
+
+    const earliestDate = Math.min(...validDates);
+    const diff = Date.now() - earliestDate;
+    const years = diff / (1000 * 60 * 60 * 24 * 365.25);
+    
+    return Math.floor(years);
+  };
+
+  const yearsExperience = calculateYearsExperience();
+  const projectCount = projects?.length || 0;
 
   return (
     <section id="about" className="py-20 relative">
@@ -58,11 +80,11 @@ export const About = () => {
             */}
             <div className="grid grid-cols-2 gap-4 pt-4">
               <div className="glass p-4 rounded-xl border border-primary/20">
-                <div className="text-3xl font-bold gradient-text">5+</div>
+                <div className="text-3xl font-bold gradient-text">{yearsExperience}+</div>
                 <div className="text-sm text-foreground/60">Years Experience</div>
               </div>
               <div className="glass p-4 rounded-xl border border-secondary/20">
-                <div className="text-3xl font-bold gradient-text">50+</div>
+                <div className="text-3xl font-bold gradient-text">{projectCount}+</div>
                 <div className="text-sm text-foreground/60">Projects Completed</div>
               </div>
             </div>

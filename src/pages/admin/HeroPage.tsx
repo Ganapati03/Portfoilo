@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useProfile, useUpdateProfile } from "@/integrations/supabase/hooks";
+import { useProfile, useUpdateProfile, useUploadImage } from "@/integrations/supabase/hooks";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const HeroPage = () => {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
+  const uploadImage = useUploadImage();
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     full_name: "",
@@ -34,6 +36,23 @@ const HeroPage = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // Using 'portfolio' bucket for resumes as well
+      const publicUrl = await uploadImage.mutateAsync({ file, bucket: "portfolio" });
+      setFormData({ ...formData, resume_url: publicUrl });
+      toast.success("Resume uploaded successfully");
+    } catch (error: any) {
+      toast.error(`Error uploading resume: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -119,12 +138,41 @@ const HeroPage = () => {
               />
             </div>
 
+            <div>
+              <Label htmlFor="resume">Resume (PDF)</Label>
+              <div className="flex items-center gap-4 mt-1">
+                {formData.resume_url && (
+                  <a 
+                    href={formData.resume_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    View Current Resume
+                  </a>
+                )}
+                <div className="flex-1">
+                  <Input
+                    id="resume"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleResumeUpload}
+                    disabled={uploading}
+                    className="glass border-primary/30 cursor-pointer"
+                  />
+                  <p className="text-xs text-foreground/50 mt-1">
+                    {uploading ? "Uploading..." : "Upload your resume (PDF/DOC)"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <Button 
               type="submit" 
-              disabled={updateProfile.isPending}
+              disabled={updateProfile.isPending || uploading}
               className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
             >
-              {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {(updateProfile.isPending || uploading) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Save Changes
             </Button>
           </form>
