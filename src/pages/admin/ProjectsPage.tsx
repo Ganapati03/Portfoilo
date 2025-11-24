@@ -12,18 +12,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useProjects, useAddProject, useDeleteProject, useUploadImage } from "@/integrations/supabase/hooks";
+import { useProjects, useAddProject, useUpdateProject, useDeleteProject, useUploadImage } from "@/integrations/supabase/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const ProjectsPage = () => {
   const { data: projects, isLoading } = useProjects();
   const addProject = useAddProject();
+  const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const uploadImage = useUploadImage();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const [newProject, setNewProject] = useState({
     title: "",
@@ -33,6 +35,19 @@ const ProjectsPage = () => {
     github_url: "",
     tags: "", // Will be converted to array
   });
+
+  const resetForm = () => {
+    setNewProject({
+      title: "",
+      description: "",
+      image_url: "",
+      demo_url: "",
+      github_url: "",
+      tags: "",
+    });
+    setEditingId(null);
+    setIsDialogOpen(false);
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +65,7 @@ const ProjectsPage = () => {
     }
   };
 
-  const handleAddProject = () => {
+  const handleSaveProject = () => {
     if (!newProject.title) {
       toast.error("Project title is required");
       return;
@@ -61,23 +76,43 @@ const ProjectsPage = () => {
       tags: newProject.tags.split(",").map(tag => tag.trim()).filter(Boolean),
     };
 
-    addProject.mutate(projectData, {
-      onSuccess: () => {
-        toast.success("Project added successfully");
-        setIsDialogOpen(false);
-        setNewProject({
-          title: "",
-          description: "",
-          image_url: "",
-          demo_url: "",
-          github_url: "",
-          tags: "",
-        });
-      },
-      onError: (error) => {
-        toast.error(`Error adding project: ${error.message}`);
-      }
+    if (editingId) {
+      updateProject.mutate({
+        id: editingId,
+        ...projectData
+      }, {
+        onSuccess: () => {
+          toast.success("Project updated successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error updating project: ${error.message}`);
+        }
+      });
+    } else {
+      addProject.mutate(projectData, {
+        onSuccess: () => {
+          toast.success("Project added successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error adding project: ${error.message}`);
+        }
+      });
+    }
+  };
+
+  const handleEditProject = (project: any) => {
+    setNewProject({
+      title: project.title,
+      description: project.description || "",
+      image_url: project.image_url || "",
+      demo_url: project.demo_url || "",
+      github_url: project.github_url || "",
+      tags: project.tags ? project.tags.join(", ") : "",
     });
+    setEditingId(project.id);
+    setIsDialogOpen(true);
   };
 
   const handleDeleteProject = (id: string) => {
@@ -90,6 +125,13 @@ const ProjectsPage = () => {
           toast.error(`Error deleting project: ${error.message}`);
         }
       });
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      resetForm();
     }
   };
 
@@ -113,16 +155,29 @@ const ProjectsPage = () => {
           <p className="text-foreground/60">Manage your portfolio projects</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
+            <Button 
+              className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+              onClick={() => {
+                setEditingId(null);
+                setNewProject({
+                  title: "",
+                  description: "",
+                  image_url: "",
+                  demo_url: "",
+                  github_url: "",
+                  tags: "",
+                });
+              }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Project
             </Button>
           </DialogTrigger>
           <DialogContent className="glass-strong border-primary/20 max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Add New Project</DialogTitle>
+              <DialogTitle>{editingId ? "Edit Project" : "Add New Project"}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
@@ -203,12 +258,12 @@ const ProjectsPage = () => {
                 />
               </div>
               <Button 
-                onClick={handleAddProject} 
+                onClick={handleSaveProject} 
                 className="bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
-                disabled={addProject.isPending || uploading}
+                disabled={addProject.isPending || updateProject.isPending || uploading}
               >
-                {addProject.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Save Project
+                {(addProject.isPending || updateProject.isPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {editingId ? "Update Project" : "Save Project"}
               </Button>
             </div>
           </DialogContent>
@@ -238,7 +293,12 @@ const ProjectsPage = () => {
                 ))}
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1 rounded-xl border-primary/50">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="flex-1 rounded-xl border-primary/50"
+                  onClick={() => handleEditProject(project)}
+                >
                   <Pencil className="w-3 h-3 mr-1" />
                   Edit
                 </Button>

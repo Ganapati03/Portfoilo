@@ -227,6 +227,41 @@ export interface Database {
           created_at?: string
         }
       }
+      education: {
+        Row: {
+          id: string
+          institution: string
+          degree: string
+          field_of_study: string
+          start_date: string | null
+          end_date: string | null
+          grade: string | null
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          institution: string
+          degree: string
+          field_of_study: string
+          start_date?: string | null
+          end_date?: string | null
+          grade?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          institution?: string
+          degree?: string
+          field_of_study?: string
+          start_date?: string | null
+          end_date?: string | null
+          grade?: string | null
+          description?: string | null
+          created_at?: string
+        }
+      }
     }
   }
 }

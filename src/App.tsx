@@ -12,6 +12,7 @@ import SkillsPage from "./pages/admin/SkillsPage";
 import ProjectsPage from "./pages/admin/ProjectsPage";
 import CertificationsPage from "./pages/admin/CertificationsPage";
 import ExperiencePage from "./pages/admin/ExperiencePage";
+import EducationPage from "./pages/admin/EducationPage";
 import AIKnowledgePage from "./pages/admin/AIKnowledgePage";
 import MessagesPage from "./pages/admin/MessagesPage";
 import SettingsPage from "./pages/admin/SettingsPage";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="certifications" element={<CertificationsPage />} />
             <Route path="experience" element={<ExperiencePage />} />
+            <Route path="education" element={<EducationPage />} />
             <Route path="ai-knowledge" element={<AIKnowledgePage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="settings" element={<SettingsPage />} />

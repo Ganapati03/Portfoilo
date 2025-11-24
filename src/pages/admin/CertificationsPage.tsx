@@ -11,18 +11,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCertifications, useAddCertification, useDeleteCertification, useUploadImage } from "@/integrations/supabase/hooks";
+import { useCertifications, useAddCertification, useUpdateCertification, useDeleteCertification, useUploadImage } from "@/integrations/supabase/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const CertificationsPage = () => {
   const { data: certifications, isLoading } = useCertifications();
   const addCertification = useAddCertification();
+  const updateCertification = useUpdateCertification();
   const deleteCertification = useDeleteCertification();
   const uploadImage = useUploadImage();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [newCert, setNewCert] = useState({
     name: "",
@@ -31,6 +33,18 @@ const CertificationsPage = () => {
     credential_url: "",
     image_url: "",
   });
+
+  const resetForm = () => {
+    setNewCert({
+      name: "",
+      issuer: "",
+      issue_date: "",
+      credential_url: "",
+      image_url: "",
+    });
+    setEditingId(null);
+    setIsDialogOpen(false);
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,31 +62,53 @@ const CertificationsPage = () => {
     }
   };
 
-  const handleAddCertification = () => {
+  const handleSaveCertification = () => {
     if (!newCert.name || !newCert.issuer) {
       toast.error("Name and Issuer are required");
       return;
     }
 
-    addCertification.mutate({
+    const certData = {
       ...newCert,
       issue_date: newCert.issue_date || null,
-    }, {
-      onSuccess: () => {
-        toast.success("Certification added successfully");
-        setIsDialogOpen(false);
-        setNewCert({
-          name: "",
-          issuer: "",
-          issue_date: "",
-          credential_url: "",
-          image_url: "",
-        });
-      },
-      onError: (error) => {
-        toast.error(`Error adding certification: ${error.message}`);
-      }
+    };
+
+    if (editingId) {
+      updateCertification.mutate({
+        id: editingId,
+        ...certData
+      }, {
+        onSuccess: () => {
+          toast.success("Certification updated successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error updating certification: ${error.message}`);
+        }
+      });
+    } else {
+      addCertification.mutate(certData, {
+        onSuccess: () => {
+          toast.success("Certification added successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error adding certification: ${error.message}`);
+        }
+      });
+    }
+  };
+
+  const handleEditCertification = (cert: any) => {
+    setNewCert({
+      name: cert.name,
+      issuer: cert.issuer,
+      issue_date: cert.issue_date || "",
+      credential_url: cert.credential_url || "",
+      image_url: cert.image_url || "",
     });
+    setEditingId(cert.id);
+    setIsDialogOpen(true);
   };
 
   const handleDeleteCertification = (id: string) => {
@@ -85,6 +121,13 @@ const CertificationsPage = () => {
           toast.error(`Error deleting certification: ${error.message}`);
         }
       });
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      resetForm();
     }
   };
 
@@ -108,16 +151,28 @@ const CertificationsPage = () => {
           <p className="text-foreground/60">Manage your certifications and credentials</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
+            <Button 
+              className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+              onClick={() => {
+                setEditingId(null);
+                setNewCert({
+                  name: "",
+                  issuer: "",
+                  issue_date: "",
+                  credential_url: "",
+                  image_url: "",
+                });
+              }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Certification
             </Button>
           </DialogTrigger>
           <DialogContent className="glass-strong border-primary/20">
             <DialogHeader>
-              <DialogTitle className="gradient-text">Add New Certification</DialogTitle>
+              <DialogTitle className="gradient-text">{editingId ? "Edit Certification" : "Add New Certification"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -184,11 +239,11 @@ const CertificationsPage = () => {
               </div>
               <Button 
                 className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
-                onClick={handleAddCertification}
-                disabled={addCertification.isPending || uploading}
+                onClick={handleSaveCertification}
+                disabled={addCertification.isPending || updateCertification.isPending || uploading}
               >
-                {addCertification.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Add Certification
+                {(addCertification.isPending || updateCertification.isPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {editingId ? "Update Certification" : "Add Certification"}
               </Button>
             </div>
           </DialogContent>
@@ -214,6 +269,7 @@ const CertificationsPage = () => {
                 size="sm" 
                 variant="outline" 
                 className="flex-1 rounded-xl border-primary/50 hover:glow-cyan"
+                onClick={() => handleEditCertification(cert)}
               >
                 <Pencil className="w-3 h-3 mr-1" />
                 Edit

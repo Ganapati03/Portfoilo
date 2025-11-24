@@ -230,6 +230,62 @@ export const useDeleteExperience = () => {
   });
 };
 
+// --- EDUCATION ---
+export const useEducation = () => {
+  return useQuery({
+    queryKey: ["education"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("education")
+        .select("*")
+        .order("start_date", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+export const useAddEducation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (education: Database['public']['Tables']['education']['Insert']) => {
+      const { data, error } = await supabase.from("education").insert(education).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["education"] });
+    },
+  });
+};
+
+export const useUpdateEducation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...education }: Database['public']['Tables']['education']['Update'] & { id: string }) => {
+      const { data, error } = await supabase.from("education").update(education).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["education"] });
+    },
+  });
+};
+
+export const useDeleteEducation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("education").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["education"] });
+    },
+  });
+};
+
 // --- CERTIFICATIONS ---
 export const useCertifications = () => {
   return useQuery({

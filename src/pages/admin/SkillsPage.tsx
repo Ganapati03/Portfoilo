@@ -19,32 +19,64 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSkills, useAddSkill, useDeleteSkill } from "@/integrations/supabase/hooks";
+import { useSkills, useAddSkill, useUpdateSkill, useDeleteSkill } from "@/integrations/supabase/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const SkillsPage = () => {
   const { data: skills, isLoading } = useSkills();
   const addSkill = useAddSkill();
+  const updateSkill = useUpdateSkill();
   const deleteSkill = useDeleteSkill();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newSkill, setNewSkill] = useState({ name: "", category: "" });
 
-  const handleAddSkill = () => {
+  const resetForm = () => {
+    setNewSkill({ name: "", category: "" });
+    setEditingId(null);
+    setIsDialogOpen(false);
+  };
+
+  const handleSaveSkill = () => {
     if (!newSkill.name || !newSkill.category) {
       toast.error("Please fill in all fields");
       return;
     }
-    addSkill.mutate(newSkill, {
-      onSuccess: () => {
-        toast.success("Skill added successfully");
-        setIsDialogOpen(false);
-        setNewSkill({ name: "", category: "" });
-      },
-      onError: (error) => {
-        toast.error(`Error adding skill: ${error.message}`);
-      }
+
+    if (editingId) {
+      updateSkill.mutate({
+        id: editingId,
+        ...newSkill
+      }, {
+        onSuccess: () => {
+          toast.success("Skill updated successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error updating skill: ${error.message}`);
+        }
+      });
+    } else {
+      addSkill.mutate(newSkill, {
+        onSuccess: () => {
+          toast.success("Skill added successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error adding skill: ${error.message}`);
+        }
+      });
+    }
+  };
+
+  const handleEditSkill = (skill: any) => {
+    setNewSkill({
+      name: skill.name,
+      category: skill.category,
     });
+    setEditingId(skill.id);
+    setIsDialogOpen(true);
   };
 
   const handleDeleteSkill = (id: string) => {
@@ -57,6 +89,13 @@ const SkillsPage = () => {
           toast.error(`Error deleting skill: ${error.message}`);
         }
       });
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      resetForm();
     }
   };
 
@@ -80,16 +119,22 @@ const SkillsPage = () => {
           <p className="text-foreground/60">Manage your skills and expertise</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
+            <Button 
+              className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+              onClick={() => {
+                setEditingId(null);
+                setNewSkill({ name: "", category: "" });
+              }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Skill
             </Button>
           </DialogTrigger>
           <DialogContent className="glass-strong border-primary/20">
             <DialogHeader>
-              <DialogTitle className="gradient-text">Add New Skill</DialogTitle>
+              <DialogTitle className="gradient-text">{editingId ? "Edit Skill" : "Add New Skill"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -112,11 +157,11 @@ const SkillsPage = () => {
               </div>
               <Button 
                 className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
-                onClick={handleAddSkill}
-                disabled={addSkill.isPending}
+                onClick={handleSaveSkill}
+                disabled={addSkill.isPending || updateSkill.isPending}
               >
-                {addSkill.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Add Skill
+                {(addSkill.isPending || updateSkill.isPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {editingId ? "Update Skill" : "Add Skill"}
               </Button>
             </div>
           </DialogContent>
@@ -147,7 +192,7 @@ const SkillsPage = () => {
                       size="sm"
                       variant="outline"
                       className="rounded-xl border-primary/50 hover:glow-cyan"
-                      // Add edit functionality later if needed
+                      onClick={() => handleEditSkill(skill)}
                     >
                       <Pencil className="w-3 h-3" />
                     </Button>

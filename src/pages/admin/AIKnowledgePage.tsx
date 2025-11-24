@@ -12,40 +12,73 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useAIKnowledge, useAddAIKnowledge, useDeleteAIKnowledge } from "@/integrations/supabase/hooks";
+import { useAIKnowledge, useAddAIKnowledge, useUpdateAIKnowledge, useDeleteAIKnowledge } from "@/integrations/supabase/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const AIKnowledgePage = () => {
   const { data: knowledgeItems, isLoading } = useAIKnowledge();
   const addKnowledge = useAddAIKnowledge();
+  const updateKnowledge = useUpdateAIKnowledge();
   const deleteKnowledge = useDeleteAIKnowledge();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newItem, setNewItem] = useState({
     topic: "",
     description: "",
   });
 
-  const handleAddKnowledge = () => {
+  const resetForm = () => {
+    setNewItem({ topic: "", description: "" });
+    setEditingId(null);
+    setIsDialogOpen(false);
+  };
+
+  const handleSaveKnowledge = () => {
     if (!newItem.topic) {
       toast.error("Topic/Question is required");
       return;
     }
 
-    addKnowledge.mutate({
+    const knowledgeData = {
       topic: newItem.topic,
       description: newItem.description,
       proficiency: 0 // Default value
-    }, {
-      onSuccess: () => {
-        toast.success("Knowledge item added successfully");
-        setIsDialogOpen(false);
-        setNewItem({ topic: "", description: "" });
-      },
-      onError: (error) => {
-        toast.error(`Error adding knowledge: ${error.message}`);
-      }
+    };
+
+    if (editingId) {
+      updateKnowledge.mutate({
+        id: editingId,
+        ...knowledgeData
+      }, {
+        onSuccess: () => {
+          toast.success("Knowledge item updated successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error updating knowledge: ${error.message}`);
+        }
+      });
+    } else {
+      addKnowledge.mutate(knowledgeData, {
+        onSuccess: () => {
+          toast.success("Knowledge item added successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error adding knowledge: ${error.message}`);
+        }
+      });
+    }
+  };
+
+  const handleEditKnowledge = (item: any) => {
+    setNewItem({
+      topic: item.topic,
+      description: item.description || "",
     });
+    setEditingId(item.id);
+    setIsDialogOpen(true);
   };
 
   const handleDeleteKnowledge = (id: string) => {
@@ -58,6 +91,13 @@ const AIKnowledgePage = () => {
           toast.error(`Error deleting item: ${error.message}`);
         }
       });
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      resetForm();
     }
   };
 
@@ -82,16 +122,22 @@ const AIKnowledgePage = () => {
             <p className="text-foreground/60">Train the AI chatbot with custom Q&A pairs</p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-              <Button className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
+              <Button 
+                className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+                onClick={() => {
+                  setEditingId(null);
+                  setNewItem({ topic: "", description: "" });
+                }}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Knowledge
               </Button>
             </DialogTrigger>
             <DialogContent className="glass-strong border-primary/20">
               <DialogHeader>
-                <DialogTitle className="gradient-text">Add Knowledge Item</DialogTitle>
+                <DialogTitle className="gradient-text">{editingId ? "Edit Knowledge Item" : "Add Knowledge Item"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -115,11 +161,11 @@ const AIKnowledgePage = () => {
                 </div>
                 <Button 
                   className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
-                  onClick={handleAddKnowledge}
-                  disabled={addKnowledge.isPending}
+                  onClick={handleSaveKnowledge}
+                  disabled={addKnowledge.isPending || updateKnowledge.isPending}
                 >
-                  {addKnowledge.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Add to Knowledge Base
+                  {(addKnowledge.isPending || updateKnowledge.isPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  {editingId ? "Update Knowledge" : "Add to Knowledge Base"}
                 </Button>
               </div>
             </DialogContent>
@@ -156,6 +202,7 @@ const AIKnowledgePage = () => {
                       size="sm" 
                       variant="outline" 
                       className="rounded-xl border-primary/50 hover:glow-cyan"
+                      onClick={() => handleEditKnowledge(item)}
                     >
                       <Pencil className="w-3 h-3" />
                     </Button>

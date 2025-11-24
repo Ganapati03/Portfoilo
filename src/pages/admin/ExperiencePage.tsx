@@ -19,15 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useExperience, useAddExperience, useDeleteExperience } from "@/integrations/supabase/hooks";
+import { useExperience, useAddExperience, useUpdateExperience, useDeleteExperience } from "@/integrations/supabase/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const ExperiencePage = () => {
   const { data: experiences, isLoading } = useExperience();
   const addExperience = useAddExperience();
+  const updateExperience = useUpdateExperience();
   const deleteExperience = useDeleteExperience();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newExperience, setNewExperience] = useState({
     company: "",
     position: "",
@@ -37,34 +39,68 @@ const ExperiencePage = () => {
     current: false,
   });
 
-  const handleAddExperience = () => {
+  const resetForm = () => {
+    setNewExperience({
+      company: "",
+      position: "",
+      start_date: "",
+      end_date: "",
+      description: "",
+      current: false,
+    });
+    setEditingId(null);
+    setIsDialogOpen(false);
+  };
+
+  const handleSaveExperience = () => {
     if (!newExperience.company || !newExperience.position) {
       toast.error("Company and Position are required");
       return;
     }
 
-    addExperience.mutate({
+    const experienceData = {
       ...newExperience,
-      // Ensure dates are in correct format or null if empty
       start_date: newExperience.start_date || null,
       end_date: newExperience.end_date || null,
-    }, {
-      onSuccess: () => {
-        toast.success("Experience added successfully");
-        setIsDialogOpen(false);
-        setNewExperience({
-          company: "",
-          position: "",
-          start_date: "",
-          end_date: "",
-          description: "",
-          current: false,
-        });
-      },
-      onError: (error) => {
-        toast.error(`Error adding experience: ${error.message}`);
-      }
+    };
+
+    if (editingId) {
+      updateExperience.mutate({
+        id: editingId,
+        ...experienceData
+      }, {
+        onSuccess: () => {
+          toast.success("Experience updated successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error updating experience: ${error.message}`);
+        }
+      });
+    } else {
+      addExperience.mutate(experienceData, {
+        onSuccess: () => {
+          toast.success("Experience added successfully");
+          resetForm();
+        },
+        onError: (error) => {
+          toast.error(`Error adding experience: ${error.message}`);
+        }
+      });
+    }
+  };
+
+  const handleEditExperience = (exp: any) => {
+    setNewExperience({
+      company: exp.company,
+      position: exp.position,
+      start_date: exp.start_date || "",
+      end_date: exp.end_date || "",
+      description: exp.description || "",
+      current: exp.current || false,
     });
+    setEditingId(exp.id);
+    setIsDialogOpen(true);
   };
 
   const handleDeleteExperience = (id: string) => {
@@ -77,6 +113,13 @@ const ExperiencePage = () => {
           toast.error(`Error deleting experience: ${error.message}`);
         }
       });
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      resetForm();
     }
   };
 
@@ -100,16 +143,29 @@ const ExperiencePage = () => {
           <p className="text-foreground/60">Manage your work experience and achievements</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan">
+            <Button 
+              className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+              onClick={() => {
+                setEditingId(null);
+                setNewExperience({
+                  company: "",
+                  position: "",
+                  start_date: "",
+                  end_date: "",
+                  description: "",
+                  current: false,
+                });
+              }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Experience
             </Button>
           </DialogTrigger>
           <DialogContent className="glass-strong border-primary/20">
             <DialogHeader>
-              <DialogTitle className="gradient-text">Add New Experience</DialogTitle>
+              <DialogTitle className="gradient-text">{editingId ? "Edit Experience" : "Add New Experience"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {/* Type selection removed as it's not in the schema, defaulting to work experience style */}
@@ -164,11 +220,11 @@ const ExperiencePage = () => {
               </div>
               <Button 
                 className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
-                onClick={handleAddExperience}
-                disabled={addExperience.isPending}
+                onClick={handleSaveExperience}
+                disabled={addExperience.isPending || updateExperience.isPending}
               >
-                {addExperience.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Add Experience
+                {(addExperience.isPending || updateExperience.isPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {editingId ? "Update Experience" : "Add Experience"}
               </Button>
             </div>
           </DialogContent>
@@ -198,6 +254,7 @@ const ExperiencePage = () => {
                       size="sm" 
                       variant="outline" 
                       className="rounded-xl border-primary/50 hover:glow-cyan"
+                      onClick={() => handleEditExperience(exp)}
                     >
                       <Pencil className="w-3 h-3" />
                     </Button>
