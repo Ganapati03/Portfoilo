@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Brain,
   MessageSquare,
+  BarChart3,
   Settings,
 } from "lucide-react";
 import {
@@ -35,6 +36,7 @@ const menuItems = [
   { title: "Education", url: "/admin/education", icon: GraduationCap },
   { title: "AI Knowledge", url: "/admin/ai-knowledge", icon: Brain },
   { title: "Messages", url: "/admin/messages", icon: MessageSquare },
+  { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 

@@ -16,6 +16,7 @@ import EducationPage from "./pages/admin/EducationPage";
 import AIKnowledgePage from "./pages/admin/AIKnowledgePage";
 import MessagesPage from "./pages/admin/MessagesPage";
 import SettingsPage from "./pages/admin/SettingsPage";
+import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="education" element={<EducationPage />} />
             <Route path="ai-knowledge" element={<AIKnowledgePage />} />
             <Route path="messages" element={<MessagesPage />} />
+            <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

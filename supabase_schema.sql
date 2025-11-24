@@ -85,6 +85,27 @@ create table public.messages (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- ANALYTICS TABLE (User Visit Tracking)
+create table public.analytics (
+  id uuid default uuid_generate_v4() primary key,
+  page_path text not null, -- e.g., '/', '/projects', '/contact'
+  page_title text, -- Page title
+  referrer text, -- Where the user came from
+  user_agent text, -- Browser/device info
+  session_id text, -- Unique session identifier
+  country text, -- Optional: country code
+  city text, -- Optional: city name
+  device_type text, -- 'mobile', 'tablet', 'desktop'
+  browser text, -- Browser name
+  os text, -- Operating system
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Create an index for faster queries on analytics
+create index analytics_created_at_idx on public.analytics(created_at desc);
+create index analytics_page_path_idx on public.analytics(page_path);
+create index analytics_session_id_idx on public.analytics(session_id);
+
 -- RLS POLICIES (Row Level Security)
 -- Enable RLS on all tables
 alter table public.profiles enable row level security;
@@ -94,6 +115,7 @@ alter table public.experience enable row level security;
 alter table public.certifications enable row level security;
 alter table public.ai_knowledge enable row level security;
 alter table public.messages enable row level security;
+alter table public.analytics enable row level security;
 
 -- Create policies (Allow Public Read, Authenticated Write)
 -- Note: For simplicity in this portfolio context, we'll allow public read.
@@ -139,3 +161,34 @@ create policy "Authenticated users can delete ai_knowledge." on public.ai_knowle
 create policy "Authenticated users can view messages." on public.messages for select using (auth.role() = 'authenticated');
 -- Anyone can insert a message (Contact form)
 create policy "Anyone can insert messages." on public.messages for insert with check (true);
+
+-- Analytics
+-- Only authenticated users (admin) can view analytics
+create policy "Authenticated users can view analytics." on public.analytics for select using (auth.role() = 'authenticated');
+-- Anyone can insert analytics (for tracking)
+create policy "Anyone can insert analytics." on public.analytics for insert with check (true);
+-- Authenticated users can delete analytics
+create policy "Authenticated users can delete analytics." on public.analytics for delete using (auth.role() = 'authenticated');
+
+-- EDUCATION TABLE
+create table public.education (
+  id uuid default uuid_generate_v4() primary key,
+  institution text not null,
+  degree text not null,
+  field_of_study text,
+  start_date date,
+  end_date date,
+  current boolean default false,
+  description text,
+  grade text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on education table
+alter table public.education enable row level security;
+
+-- Education policies
+create policy "Public education are viewable by everyone." on public.education for select using (true);
+create policy "Authenticated users can insert education." on public.education for insert with check (auth.role() = 'authenticated');
+create policy "Authenticated users can update education." on public.education for update using (auth.role() = 'authenticated');
+create policy "Authenticated users can delete education." on public.education for delete using (auth.role() = 'authenticated');

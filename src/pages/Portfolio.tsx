@@ -10,8 +10,12 @@ import { Contact } from "@/components/portfolio/Contact";
 import { Navbar } from "@/components/portfolio/Navbar";
 import { Footer } from "@/components/portfolio/Footer";
 import { ChatWidget } from "@/components/portfolio/ChatWidget";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 const Portfolio = () => {
+  // Track page visit
+  useAnalytics("/", "Portfolio Home");
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
