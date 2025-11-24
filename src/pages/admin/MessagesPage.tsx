@@ -10,18 +10,32 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { useMessages, useMarkMessageRead } from "@/integrations/supabase/hooks";
+import { useMessages, useMarkMessageRead, useDeleteMessage } from "@/integrations/supabase/hooks";
 import { toast } from "sonner";
 
 const MessagesPage = () => {
   const { data: messages, isLoading } = useMessages();
   const markAsRead = useMarkMessageRead();
+  const deleteMessage = useDeleteMessage();
 
   const handleViewMessage = (id: string, isRead: boolean) => {
     if (!isRead) {
       markAsRead.mutate(id, {
         onError: (error) => {
           console.error("Error marking message as read:", error);
+        }
+      });
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this message?")) {
+      deleteMessage.mutate(id, {
+        onSuccess: () => {
+          toast.success("Message deleted successfully");
+        },
+        onError: (error) => {
+          toast.error(`Error deleting message: ${error.message}`);
         }
       });
     }
@@ -111,7 +125,10 @@ const MessagesPage = () => {
                               {msg.message}
                             </div>
                           </div>
-                          <Button className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary">
+                          <Button 
+                            className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+                            onClick={() => window.location.href = `mailto:${msg.email}?subject=Re: Portfolio Inquiry`}
+                          >
                             Reply via Email
                           </Button>
                         </div>
@@ -122,6 +139,7 @@ const MessagesPage = () => {
                       size="sm" 
                       variant="outline" 
                       className="rounded-xl border-destructive/50 hover:bg-destructive/10"
+                      onClick={() => handleDelete(msg.id)}
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>

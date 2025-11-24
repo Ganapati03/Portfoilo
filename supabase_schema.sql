@@ -14,6 +14,8 @@ create table public.profiles (
   github_url text,
   linkedin_url text,
   twitter_url text,
+  gemini_api_key text,
+  registration_enabled boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

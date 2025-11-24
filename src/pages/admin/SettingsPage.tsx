@@ -19,6 +19,7 @@ const SettingsPage = () => {
     linkedin_url: "",
     twitter_url: "",
     gemini_api_key: "",
+    registration_enabled: false,
   });
 
   useEffect(() => {
@@ -29,6 +30,7 @@ const SettingsPage = () => {
         linkedin_url: profile.linkedin_url || "",
         twitter_url: profile.twitter_url || "",
         gemini_api_key: profile.gemini_api_key || "",
+        registration_enabled: profile.registration_enabled || false,
       });
     }
   }, [profile]);
@@ -43,6 +45,7 @@ const SettingsPage = () => {
       linkedin_url: formData.linkedin_url,
       twitter_url: formData.twitter_url,
       gemini_api_key: formData.gemini_api_key,
+      registration_enabled: formData.registration_enabled,
       updated_at: new Date().toISOString(),
     }, {
       onSuccess: () => {
@@ -170,16 +173,19 @@ const SettingsPage = () => {
           </div>
         </Card>
 
-        {/* Features - UI Only for now */}
-        <Card className="glass-strong p-6 border border-primary/20 opacity-50 pointer-events-none">
-          <h3 className="text-xl font-bold mb-6">Features (Coming Soon)</h3>
+        {/* Features */}
+        <Card className="glass-strong p-6 border border-primary/20">
+          <h3 className="text-xl font-bold mb-6">Features</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label>Enable AI Chatbot</Label>
-                <p className="text-sm text-foreground/60">Allow visitors to chat with AI assistant</p>
+                <Label>Enable Registration</Label>
+                <p className="text-sm text-foreground/60">Allow new users to sign up (Admin only)</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={formData.registration_enabled}
+                onCheckedChange={(checked) => setFormData({ ...formData, registration_enabled: checked })}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>

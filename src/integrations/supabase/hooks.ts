@@ -437,6 +437,19 @@ export const useMarkMessageRead = () => {
   });
 };
 
+export const useDeleteMessage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("messages").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages"] });
+    },
+  });
+};
+
 // --- STORAGE ---
 export const useUploadImage = () => {
   return useMutation({

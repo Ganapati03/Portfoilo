@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,32 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState(false);
+
+  useEffect(() => {
+    const checkRegistrationStatus = async () => {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('registration_enabled')
+        .limit(1);
+      
+      if (error) {
+        console.error('Error checking registration status:', error);
+        return;
+      }
+
+      // If no profiles exist, allow registration (first user)
+      if (!profiles || profiles.length === 0) {
+        setRegistrationEnabled(true);
+        return;
+      }
+
+      // Otherwise, use the setting from the profile
+      setRegistrationEnabled(profiles[0].registration_enabled || false);
+    };
+
+    checkRegistrationStatus();
+  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +47,10 @@ const Login = () => {
 
     try {
       if (isSignUp) {
+        if (!registrationEnabled) {
+          toast.error("Registration is currently disabled.");
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -91,17 +121,19 @@ const Login = () => {
               ) : null}
               {isSignUp ? "Sign Up" : "Login"}
             </Button>
-            <div className="text-center text-sm">
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-primary hover:underline"
-              >
-                {isSignUp
-                  ? "Already have an account? Login"
-                  : "Need an account? Sign Up"}
-              </button>
-            </div>
+            {registrationEnabled && (
+              <div className="text-center text-sm">
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-primary hover:underline"
+                >
+                  {isSignUp
+                    ? "Already have an account? Login"
+                    : "Need an account? Sign Up"}
+                </button>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

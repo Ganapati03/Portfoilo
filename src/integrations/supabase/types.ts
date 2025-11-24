@@ -22,6 +22,7 @@ export interface Database {
           linkedin_url: string | null
           twitter_url: string | null
           gemini_api_key: string | null
+          registration_enabled: boolean | null
           created_at: string
           updated_at: string
         }
@@ -37,6 +38,7 @@ export interface Database {
           linkedin_url?: string | null
           twitter_url?: string | null
           gemini_api_key?: string | null
+          registration_enabled?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -52,6 +54,7 @@ export interface Database {
           linkedin_url?: string | null
           twitter_url?: string | null
           gemini_api_key?: string | null
+          registration_enabled?: boolean | null
           created_at?: string
           updated_at?: string
         }
