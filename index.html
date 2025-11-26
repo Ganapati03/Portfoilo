@@ -4,58 +4,71 @@
     <meta charset="UTF-8" />
 
     <!-- Mobile friendly -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
 
     <!-- Primary SEO -->
-    <title>Ganapati Gouda — Full Stack Developer Portfolio (MERN / React / Node)</title>
-    <meta name="description" content="Ganapati Gouda — Full Stack MERN Developer building high-performance web apps using React, Node.js, MongoDB, and TypeScript. View projects, skills, and experience." />
-    <meta name="keywords" content="Ganapati Gouda, Full Stack Developer, MERN Developer, React Developer, Node.js Developer, Portfolio, Web Developer" />
+    <title>Ganapati Gouda — Full Stack MERN Developer | Portfolio</title>
+    <meta name="description" content="Ganapati Gouda — Full Stack MERN Developer building modern, scalable and high-performance applications using React, Node.js, Express, MongoDB and TypeScript." />
+    <meta name="keywords" content="Ganapati, Ganapati Gouda, Ganapati Goud, Ganapati Developer, Ganapati MERN Developer, Full Stack Developer, React Developer, Node Developer, Web Developer" />
     <meta name="author" content="Ganapati Gouda" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
 
-    <!-- Canonical URL (prevents duplicate content) -->
+    <!-- Canonical URL -->
     <link rel="canonical" href="https://ganapatigoud.me/" />
 
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
     <!-- Open Graph (Social Sharing / WhatsApp / LinkedIn / Facebook) -->
-    <meta property="og:title" content="Ganapati Gouda — Full Stack Developer Portfolio" />
-    <meta property="og:description" content="Explore my web development portfolio featuring modern MERN stack, full stack apps, UI/UX designs, and cloud projects." />
+    <meta property="og:title" content="Ganapati Gouda — Full Stack MERN Developer" />
+    <meta property="og:description" content="Explore MERN stack projects and modern web development work by Ganapati Gouda." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ganapatigoud.me/" />
     <meta property="og:image" content="https://ganapatigoud.me/og-image.png" />
+    <meta property="og:site_name" content="Ganapati Gouda Portfolio" />
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Ganapati Gouda — Full Stack Developer Portfolio" />
-    <meta name="twitter:description" content="Explore my projects built with React, Node.js, MongoDB, TypeScript, and modern technologies." />
-    <meta name="twitter:image" content="https://ganapatigoud.me/og-image.png" />
-
-    <!-- Favicon (Improves SEO + brand identity) -->
-    <link rel="icon" type="image/png" href="/favicon.png" />
-
-    <!-- Preconnect fonts (performance boost) -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- JSON-LD Schema (Massive SEO boost — Google understands your site) -->
+    <!-- JSON-LD Schema (For name ranking) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Person",
       "name": "Ganapati Gouda",
+      "alternateName": ["Ganapati", "Ganapati Goud", "Ganapati Gouda Developer"],
       "url": "https://ganapatigoud.me",
-      "jobTitle": "Full Stack Developer",
+      "jobTitle": "Full Stack MERN Developer",
       "description": "Full Stack MERN Developer specialized in building scalable web apps.",
+      "image": "https://ganapatigoud.me/og-image.png",
       "sameAs": [
         "https://github.com/Ganapati03",
-        "https://www.linkedin.com/in/ganapatigoud/"
+        "https://www.linkedin.com/in/ganapati-gouda-43b400342/"
       ]
     }
     </script>
   </head>
 
   <body>
-    <div id="root"></div>
+
+    <!-- Fallback Content for Bing & Google (CRITICAL for indexing React SPA) -->
+    <noscript>
+      <h1>Ganapati Gouda — Full Stack MERN Developer</h1>
+      <p>This is the official portfolio website of Ganapati Gouda, a MERN stack developer.</p>
+    </noscript>
+
+    <div id="root">
+      <!-- Invisible fallback content (helps Bing index your site properly) -->
+      <h1 style="display:none;">Ganapati Gouda — Full Stack MERN Developer</h1>
+      <p style="display:none;">Portfolio of MERN developer Ganapati Gouda.</p>
+      <p style="display:none;">Web developer portfolio showcasing skills, projects, and experience.</p>
+    </div>
+
+    <!-- Vite React App -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
