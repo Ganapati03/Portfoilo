@@ -161,6 +161,10 @@ create policy "Authenticated users can delete ai_knowledge." on public.ai_knowle
 create policy "Authenticated users can view messages." on public.messages for select using (auth.role() = 'authenticated');
 -- Anyone can insert a message (Contact form)
 create policy "Anyone can insert messages." on public.messages for insert with check (true);
+-- Authenticated users can update messages (e.g., mark as read)
+create policy "Authenticated users can update messages." on public.messages for update using (auth.role() = 'authenticated');
+-- Authenticated users can delete messages
+create policy "Authenticated users can delete messages." on public.messages for delete using (auth.role() = 'authenticated');
 
 -- Analytics
 -- Only authenticated users (admin) can view analytics
@@ -192,3 +196,68 @@ create policy "Public education are viewable by everyone." on public.education f
 create policy "Authenticated users can insert education." on public.education for insert with check (auth.role() = 'authenticated');
 create policy "Authenticated users can update education." on public.education for update using (auth.role() = 'authenticated');
 create policy "Authenticated users can delete education." on public.education for delete using (auth.role() = 'authenticated');
+
+-- BLOG TABLE
+create table public.blog_posts (
+  id uuid default uuid_generate_v4() primary key,
+  title text not null,
+  slug text not null unique, -- URL-friendly version of title
+  excerpt text, -- Short summary for previews
+  content text not null, -- Full blog content (supports markdown)
+  featured_image_url text, -- Main blog image
+  tags text[], -- Array of tags/categories
+  published boolean default false, -- Draft or published
+  view_count integer default 0, -- Track views
+  read_time integer, -- Estimated read time in minutes
+  author_name text, -- Author name (from profile)
+  seo_title text, -- SEO optimized title
+  seo_description text, -- SEO meta description
+  published_at timestamp with time zone, -- When it was published
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Create indexes for better query performance
+create index blog_posts_slug_idx on public.blog_posts(slug);
+create index blog_posts_published_idx on public.blog_posts(published);
+create index blog_posts_published_at_idx on public.blog_posts(published_at desc);
+create index blog_posts_tags_idx on public.blog_posts using gin(tags);
+
+-- Enable RLS on blog_posts table
+alter table public.blog_posts enable row level security;
+
+-- Blog policies
+-- Public can view only published blogs
+create policy "Public can view published blogs." on public.blog_posts for select using (published = true);
+-- Authenticated users can view all blogs (including drafts)
+create policy "Authenticated users can view all blogs." on public.blog_posts for select using (auth.role() = 'authenticated');
+-- Authenticated users can insert blogs
+create policy "Authenticated users can insert blogs." on public.blog_posts for insert with check (auth.role() = 'authenticated');
+-- Authenticated users can update blogs
+create policy "Authenticated users can update blogs." on public.blog_posts for update using (auth.role() = 'authenticated');
+-- Authenticated users can delete blogs
+create policy "Authenticated users can delete blogs." on public.blog_posts for delete using (auth.role() = 'authenticated');
+
+-- STORAGE BUCKETS
+-- Create storage bucket for blog images
+insert into storage.buckets (id, name, public)
+values ('blog-images', 'blog-images', true)
+on conflict (id) do nothing;
+
+-- Storage policies for blog images
+create policy "Public can view blog images"
+on storage.objects for select
+using ( bucket_id = 'blog-images' );
+
+create policy "Authenticated users can upload blog images"
+on storage.objects for insert
+with check ( bucket_id = 'blog-images' and auth.role() = 'authenticated' );
+
+create policy "Authenticated users can update blog images"
+on storage.objects for update
+using ( bucket_id = 'blog-images' and auth.role() = 'authenticated' );
+
+create policy "Authenticated users can delete blog images"
+on storage.objects for delete
+using ( bucket_id = 'blog-images' and auth.role() = 'authenticated' );
+

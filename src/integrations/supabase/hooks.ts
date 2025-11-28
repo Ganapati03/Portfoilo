@@ -9,6 +9,7 @@ type Experience = Database['public']['Tables']['experience']['Row'];
 type Certification = Database['public']['Tables']['certifications']['Row'];
 type AIKnowledge = Database['public']['Tables']['ai_knowledge']['Row'];
 type Message = Database['public']['Tables']['messages']['Row'];
+type BlogPost = Database['public']['Tables']['blog_posts']['Row'];
 
 // --- PROFILES ---
 export const useProfile = () => {
@@ -446,6 +447,134 @@ export const useDeleteMessage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["messages"] });
+    },
+  });
+};
+
+// --- BLOG POSTS ---
+export const useBlogPosts = () => {
+  return useQuery({
+    queryKey: ["blog_posts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+// Fetch only published blog posts (for public view)
+export const usePublishedBlogPosts = () => {
+  return useQuery({
+    queryKey: ["published_blog_posts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("*")
+        .eq("published", true)
+        .order("published_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+// Fetch a single blog post by slug
+export const useBlogPostBySlug = (slug: string) => {
+  return useQuery({
+    queryKey: ["blog_post", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug,
+  });
+};
+
+export const useAddBlogPost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (post: Database['public']['Tables']['blog_posts']['Insert']) => {
+      const { data, error } = await supabase.from("blog_posts").insert(post).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blog_posts"] });
+      queryClient.invalidateQueries({ queryKey: ["published_blog_posts"] });
+    },
+  });
+};
+
+export const useUpdateBlogPost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...post }: Database['public']['Tables']['blog_posts']['Update'] & { id: string }) => {
+      const { data, error } = await supabase.from("blog_posts").update(post).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blog_posts"] });
+      queryClient.invalidateQueries({ queryKey: ["published_blog_posts"] });
+    },
+  });
+};
+
+export const useDeleteBlogPost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blog_posts"] });
+      queryClient.invalidateQueries({ queryKey: ["published_blog_posts"] });
+    },
+  });
+};
+
+// Toggle publish status
+export const useToggleBlogPublish = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, published }: { id: string; published: boolean }) => {
+      const updateData: Database['public']['Tables']['blog_posts']['Update'] = {
+        published,
+        published_at: published ? new Date().toISOString() : null,
+      };
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blog_posts"] });
+      queryClient.invalidateQueries({ queryKey: ["published_blog_posts"] });
+    },
+  });
+};
+
+// Increment view count
+export const useIncrementBlogView = () => {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.rpc('increment_blog_view', { post_id: id });
+      if (error) throw error;
+      return data;
     },
   });
 };

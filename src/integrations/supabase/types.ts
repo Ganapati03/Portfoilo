@@ -265,6 +265,62 @@ export interface Database {
           created_at?: string
         }
       }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          excerpt: string | null
+          content: string
+          featured_image_url: string | null
+          tags: string[] | null
+          published: boolean
+          view_count: number
+          read_time: number | null
+          author_name: string | null
+          seo_title: string | null
+          seo_description: string | null
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          excerpt?: string | null
+          content: string
+          featured_image_url?: string | null
+          tags?: string[] | null
+          published?: boolean
+          view_count?: number
+          read_time?: number | null
+          author_name?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          excerpt?: string | null
+          content?: string
+          featured_image_url?: string | null
+          tags?: string[] | null
+          published?: boolean
+          view_count?: number
+          read_time?: number | null
+          author_name?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
