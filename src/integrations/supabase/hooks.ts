@@ -417,9 +417,9 @@ export const useMessages = () => {
 export const useSendMessage = () => {
   return useMutation({
     mutationFn: async (message: Database['public']['Tables']['messages']['Insert']) => {
-      const { data, error } = await supabase.from("messages").insert(message).select().single();
+      const { error } = await supabase.from("messages").insert(message);
       if (error) throw error;
-      return data;
+      return null;
     },
   });
 };

@@ -1,10 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send } from "lucide-react";
+import { MessageCircle, X, Send, Volume2, VolumeX, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAIKnowledge, useProfile } from "@/integrations/supabase/hooks";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  useAIKnowledge, 
+  useProfile, 
+  useProjects, 
+  useSkills, 
+  useExperience, 
+  useEducation, 
+  useCertifications 
+} from "@/integrations/supabase/hooks";
 
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,8 +28,78 @@ export const ChatWidget = () => {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [language, setLanguage] = useState("en");
+
+  const LANGUAGES = [
+    { code: "en", name: "English", native: "English" },
+    { code: "es", name: "Spanish", native: "Español" },
+    { code: "fr", name: "French", native: "Français" },
+    { code: "de", name: "German", native: "Deutsch" },
+    { code: "hi", name: "Hindi", native: "हिन्दी" },
+    { code: "ta", name: "Tamil", native: "தமிழ்" },
+    { code: "zh", name: "Chinese", native: "中文" },
+    { code: "ja", name: "Japanese", native: "日本語" },
+    { code: "kn", name: "Kannada", native: "ಕನ್ನಡ" },
+  ];
+  
   const { data: knowledgeBase } = useAIKnowledge();
   const { data: profile } = useProfile();
+  const { data: projects } = useProjects();
+  const { data: skills } = useSkills();
+  const { data: experience } = useExperience();
+  const { data: education } = useEducation();
+  const { data: certifications } = useCertifications();
+
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      setVoices(availableVoices);
+    };
+
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  const speak = (text: string) => {
+    if (!isVoiceEnabled) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    let selectedVoice = null;
+
+    if (language === 'en') {
+      // Jarvis-like voice selection strategy for English
+      selectedVoice = voices.find(v => 
+        (v.name.includes("UK") || v.name.includes("Great Britain") || v.lang.includes("en-GB")) && 
+        !v.name.includes("Female")
+      ) || voices.find(v => v.lang.includes("en-GB")) || voices.find(v => v.lang.includes("en-US"));
+    } else {
+      // Find a voice that matches the selected language code
+      selectedVoice = voices.find(v => v.lang.startsWith(language));
+    }
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    // Adjust pitch/rate based on language/persona
+    if (language === 'en') {
+      utterance.pitch = 0.9;
+      utterance.rate = 1.05;
+    } else {
+      utterance.pitch = 1;
+      utterance.rate = 1;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -30,14 +114,44 @@ export const ChatWidget = () => {
         throw new Error("Gemini API key not configured");
       }
 
-      // Construct context from knowledge base
-      const context = knowledgeBase?.map(k => `${k.topic}: ${k.description}`).join("\n") || "";
+      // Construct context from all available data
+      const knowledgeContext = knowledgeBase?.map(k => `${k.topic}: ${k.description}`).join("\n") || "";
+      
+      const projectsContext = projects?.length 
+        ? "\nProjects:\n" + projects.map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags?.join(', ')})`).join("\n") 
+        : "";
+        
+      const skillsContext = skills?.length 
+        ? "\nSkills:\n" + skills.map(s => `- ${s.name} (${s.category})`).join("\n") 
+        : "";
+        
+      const experienceContext = experience?.length 
+        ? "\nExperience:\n" + experience.map(e => `- ${e.position} at ${e.company} (${e.start_date} - ${e.current ? 'Present' : e.end_date})`).join("\n") 
+        : "";
+
+      const educationContext = education?.length
+        ? "\nEducation:\n" + education.map(e => `- ${e.degree} in ${e.field_of_study} at ${e.institution}`).join("\n")
+        : "";
+
+      const certificationsContext = certifications?.length
+        ? "\nCertifications:\n" + certifications.map(c => `- ${c.name} from ${c.issuer}`).join("\n")
+        : "";
+
       const systemPrompt = `You are an AI assistant for ${profile.full_name}'s portfolio. 
-      Here is some context about ${profile.full_name}:
-      ${context}
+      
+      Here is the comprehensive data about ${profile.full_name}:
+      
+      ${knowledgeContext}
+      ${projectsContext}
+      ${skillsContext}
+      ${experienceContext}
+      ${educationContext}
+      ${certificationsContext}
+      
+      IMPORTANT: You must answer in ${LANGUAGES.find(l => l.code === language)?.name || 'English'}.
       
       Answer the user's question based on this context. If the answer isn't in the context, politely say you don't know but suggest contacting ${profile.full_name} directly.
-      Keep answers concise and professional.`;
+      Keep answers concise, professional, and engaging. Do not output markdown symbols like ** or # in your response as it will be spoken aloud.`;
 
       console.log("Sending request to Gemini API...");
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${profile.gemini_api_key}`, {
@@ -67,6 +181,8 @@ export const ChatWidget = () => {
         ...prev,
         { text: botResponse, isBot: true },
       ]);
+
+      speak(botResponse);
     } catch (error: any) {
       console.error("Chat error:", error);
       let errorMessage = "I'm having trouble connecting right now. Please try again later.";
@@ -113,9 +229,47 @@ export const ChatWidget = () => {
           >
             <div className="glass-strong rounded-2xl border border-primary/20 overflow-hidden">
               {/* Header */}
-              <div className="p-4 border-b border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10">
-                <h3 className="font-bold gradient-text">AI Assistant</h3>
-                <p className="text-xs text-foreground/50">Always here to help</p>
+              <div className="p-4 border-b border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10 flex justify-between items-center">
+                <div>
+                  <h3 className="font-bold gradient-text">AI Assistant</h3>
+                  <p className="text-xs text-foreground/50">Always here to help</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-primary/20"
+                        title="Select Language"
+                      >
+                        <Globe className="w-4 h-4 text-primary" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="glass-strong border-primary/20">
+                      {LANGUAGES.map((lang) => (
+                        <DropdownMenuItem
+                          key={lang.code}
+                          onClick={() => setLanguage(lang.code)}
+                          className={`cursor-pointer ${language === lang.code ? "bg-primary/20" : ""}`}
+                        >
+                          <span className="mr-2">{lang.native}</span>
+                          <span className="text-xs text-foreground/50">({lang.name})</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-primary/20"
+                    onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+                    title={isVoiceEnabled ? "Mute Voice" : "Enable Voice"}
+                  >
+                    {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-foreground/50" />}
+                  </Button>
+                </div>
               </div>
 
               {/* Messages */}
@@ -212,13 +366,47 @@ export const ChatWidget = () => {
                     <h3 className="font-bold gradient-text">AI Assistant</h3>
                     <p className="text-xs text-foreground/50">Always here to help</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <X className="w-5 h-5" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:bg-primary/20"
+                        >
+                          <Globe className="w-4 h-4 text-primary" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="glass-strong border-primary/20">
+                        {LANGUAGES.map((lang) => (
+                          <DropdownMenuItem
+                            key={lang.code}
+                            onClick={() => setLanguage(lang.code)}
+                            className={`cursor-pointer ${language === lang.code ? "bg-primary/20" : ""}`}
+                          >
+                            <span className="mr-2">{lang.native}</span>
+                            <span className="text-xs text-foreground/50">({lang.name})</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-primary/20"
+                      onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+                    >
+                      {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-foreground/50" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
