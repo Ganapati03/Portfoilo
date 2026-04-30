@@ -11,6 +11,7 @@ import { Contact } from "@/components/portfolio/Contact";
 import { Navbar } from "@/components/portfolio/Navbar";
 import { Footer } from "@/components/portfolio/Footer";
 import { ChatWidget } from "@/components/portfolio/ChatWidget";
+import { WelcomeGate } from "@/components/portfolio/WelcomeGate";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 const Portfolio = () => {
@@ -18,7 +19,8 @@ const Portfolio = () => {
   useAnalytics("/", "Portfolio Home");
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground relative">
+      <WelcomeGate />
       <Navbar />
       <main>
         <Hero />

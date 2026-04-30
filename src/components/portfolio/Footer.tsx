@@ -13,9 +13,9 @@ export const Footer = () => {
   ];
 
   return (
-    <footer className="py-12 border-t border-primary/10">
+    <footer className="py-12 border-t border-portfolio-border bg-portfolio-bg">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -29,9 +29,9 @@ export const Footer = () => {
                 aria-label={social.label}
                 target={social.label !== "Email" ? "_blank" : undefined}
                 rel={social.label !== "Email" ? "noopener noreferrer" : undefined}
-                className="p-3 glass rounded-xl border border-primary/20 hover:glow-cyan transition-all hover:-translate-y-1"
+                className="p-3 bg-portfolio-card rounded-xl border border-portfolio-border hover:border-portfolio-border-accent transition-all hover:-translate-y-1 hover:bg-portfolio-accent/5 group"
               >
-                <social.icon className="w-5 h-5 text-primary" />
+                <social.icon className="w-5 h-5 text-portfolio-muted group-hover:text-portfolio-accent transition-colors" />
               </a>
             ))}
           </motion.div>
@@ -40,13 +40,13 @@ export const Footer = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center text-sm text-foreground/50"
+            className="text-center text-sm text-portfolio-muted font-medium"
           >
             <p>© {new Date().getFullYear()} {profile?.full_name || "John Doe"}. All rights reserved.</p>
-            <p className="mt-2">Built with React, TailwindCSS & Framer Motion</p>
+            <p className="mt-2 text-portfolio-muted/70">Designed for the future.</p>
             <a 
               href="/admin" 
-              className="inline-block mt-3 text-xs text-primary/50 hover:text-primary transition-colors"
+              className="inline-block mt-4 text-xs font-bold uppercase tracking-widest text-portfolio-text-sec hover:text-portfolio-accent transition-colors"
             >
               Admin Panel
             </a>

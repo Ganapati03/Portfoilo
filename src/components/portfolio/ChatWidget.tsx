@@ -20,9 +20,14 @@ import {
   useCertifications 
 } from "@/integrations/supabase/hooks";
 
+type Message = {
+  text: string;
+  isBot: boolean;
+};
+
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     { text: "Hi! How can I help you today?", isBot: true },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -213,7 +218,7 @@ export const ChatWidget = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary glow-cyan flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-portfolio-accent flex items-center justify-center text-portfolio-bg shadow-[0_0_20px_rgba(0,217,126,0.5)]"
       >
         {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </motion.button>
@@ -227,13 +232,13 @@ export const ChatWidget = () => {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-24 right-6 w-[380px] max-w-[calc(100vw-3rem)] md:w-96 z-50"
           >
-            <div className="glass-strong rounded-2xl border border-primary/20 overflow-hidden">
+            <div className="bg-portfolio-card rounded-2xl border border-portfolio-border overflow-hidden shadow-2xl">
               {/* Header */}
-              <div className="p-4 border-b border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10 flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold gradient-text">AI Assistant</h3>
-                  <p className="text-xs text-foreground/50">Always here to help</p>
-                </div>
+                <div className="p-4 border-b border-portfolio-border bg-portfolio-secondary flex justify-between items-center">
+                  <div>
+                    <h3 className="font-display font-bold text-white">AI Assistant</h3>
+                    <p className="text-xs text-portfolio-muted">Always here to help</p>
+                  </div>
                 <div className="flex items-center gap-1">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -243,18 +248,18 @@ export const ChatWidget = () => {
                         className="h-8 w-8 hover:bg-primary/20"
                         title="Select Language"
                       >
-                        <Globe className="w-4 h-4 text-primary" />
+                        <Globe className="w-4 h-4 text-portfolio-text-sec" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="glass-strong border-primary/20">
+                    <DropdownMenuContent align="end" className="bg-portfolio-card border border-portfolio-border text-white">
                       {LANGUAGES.map((lang) => (
                         <DropdownMenuItem
                           key={lang.code}
                           onClick={() => setLanguage(lang.code)}
-                          className={`cursor-pointer ${language === lang.code ? "bg-primary/20" : ""}`}
+                          className={`cursor-pointer focus:bg-portfolio-secondary ${language === lang.code ? "bg-portfolio-secondary" : ""}`}
                         >
                           <span className="mr-2">{lang.native}</span>
-                          <span className="text-xs text-foreground/50">({lang.name})</span>
+                          <span className="text-xs text-portfolio-muted">({lang.name})</span>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -267,7 +272,7 @@ export const ChatWidget = () => {
                     onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
                     title={isVoiceEnabled ? "Mute Voice" : "Enable Voice"}
                   >
-                    {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-foreground/50" />}
+                    {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-portfolio-accent" /> : <VolumeX className="w-4 h-4 text-portfolio-muted" />}
                   </Button>
                 </div>
               </div>
@@ -301,22 +306,22 @@ export const ChatWidget = () => {
                       animate={{ opacity: 1 }}
                       className="flex justify-start"
                     >
-                      <div className="glass border border-primary/20 p-3 rounded-2xl">
+                      <div className="bg-portfolio-secondary border border-portfolio-border p-3 rounded-2xl">
                         <div className="flex gap-1">
                           <motion.div
                             animate={{ y: [0, -5, 0] }}
                             transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-                            className="w-2 h-2 rounded-full bg-primary"
+                            className="w-2 h-2 rounded-full bg-portfolio-text-sec"
                           />
                           <motion.div
                             animate={{ y: [0, -5, 0] }}
                             transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-                            className="w-2 h-2 rounded-full bg-primary"
+                            className="w-2 h-2 rounded-full bg-portfolio-text-sec"
                           />
                           <motion.div
                             animate={{ y: [0, -5, 0] }}
                             transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-                            className="w-2 h-2 rounded-full bg-primary"
+                            className="w-2 h-2 rounded-full bg-portfolio-text-sec"
                           />
                         </div>
                       </div>
@@ -326,19 +331,19 @@ export const ChatWidget = () => {
               </ScrollArea>
 
               {/* Input */}
-              <div className="p-4 border-t border-primary/20">
+              <div className="p-4 border-t border-portfolio-border">
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
                     placeholder="Type your message..."
-                    className="glass border-primary/30 rounded-xl"
+                    className="bg-portfolio-bg border-portfolio-border rounded-xl text-white focus-visible:ring-portfolio-accent"
                   />
                   <Button
                     onClick={handleSend}
                     size="icon"
-                    className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+                    className="rounded-xl bg-portfolio-accent text-portfolio-bg hover:bg-portfolio-accent/90"
                   >
                     <Send className="w-4 h-4" />
                   </Button>
@@ -359,12 +364,12 @@ export const ChatWidget = () => {
             className="md:hidden fixed inset-0 bg-background z-40"
           >
             {/* Same chat UI but full screen on mobile */}
-            <div className="h-full flex flex-col">
-              <div className="p-4 border-b border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10">
+            <div className="h-full flex flex-col bg-portfolio-bg">
+              <div className="p-4 border-b border-portfolio-border bg-portfolio-secondary">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold gradient-text">AI Assistant</h3>
-                    <p className="text-xs text-foreground/50">Always here to help</p>
+                    <h3 className="font-display font-bold text-white">AI Assistant</h3>
+                    <p className="text-xs text-portfolio-muted">Always here to help</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <DropdownMenu>
@@ -374,18 +379,18 @@ export const ChatWidget = () => {
                           size="icon"
                           className="h-8 w-8 hover:bg-primary/20"
                         >
-                          <Globe className="w-4 h-4 text-primary" />
+                          <Globe className="w-4 h-4 text-portfolio-text-sec" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="glass-strong border-primary/20">
+                      <DropdownMenuContent align="end" className="bg-portfolio-card border border-portfolio-border text-white">
                         {LANGUAGES.map((lang) => (
                           <DropdownMenuItem
                             key={lang.code}
                             onClick={() => setLanguage(lang.code)}
-                            className={`cursor-pointer ${language === lang.code ? "bg-primary/20" : ""}`}
+                            className={`cursor-pointer focus:bg-portfolio-secondary ${language === lang.code ? "bg-portfolio-secondary" : ""}`}
                           >
                             <span className="mr-2">{lang.native}</span>
-                            <span className="text-xs text-foreground/50">({lang.name})</span>
+                            <span className="text-xs text-portfolio-muted">({lang.name})</span>
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
@@ -397,12 +402,13 @@ export const ChatWidget = () => {
                       className="h-8 w-8 hover:bg-primary/20"
                       onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
                     >
-                      {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-foreground/50" />}
+                      {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-portfolio-accent" /> : <VolumeX className="w-4 h-4 text-portfolio-muted" />}
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => setIsOpen(false)}
+                      className="text-portfolio-text-sec"
                     >
                       <X className="w-5 h-5" />
                     </Button>
@@ -413,37 +419,39 @@ export const ChatWidget = () => {
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
                   {messages.map((message, index) => (
-                    <div
+                    <motion.div
                       key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
                       className={`flex ${message.isBot ? "justify-start" : "justify-end"}`}
                     >
                       <div
                         className={`max-w-[80%] p-3 rounded-2xl ${
                           message.isBot
-                            ? "glass border border-primary/20"
-                            : "bg-gradient-to-r from-primary to-secondary"
+                            ? "bg-portfolio-secondary text-white border border-portfolio-border"
+                            : "bg-portfolio-accent text-portfolio-bg font-medium"
                         }`}
                       >
-                        <p className="text-sm">{message.text}</p>
+                        <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t border-primary/20">
+              <div className="p-4 border-t border-portfolio-border">
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
                     placeholder="Type your message..."
-                    className="glass border-primary/30 rounded-xl"
+                    className="bg-portfolio-bg border-portfolio-border rounded-xl text-white focus-visible:ring-portfolio-accent"
                   />
                   <Button
                     onClick={handleSend}
                     size="icon"
-                    className="rounded-xl bg-gradient-to-r from-primary to-secondary"
+                    className="rounded-xl bg-portfolio-accent text-portfolio-bg hover:bg-portfolio-accent/90"
                   >
                     <Send className="w-4 h-4" />
                   </Button>

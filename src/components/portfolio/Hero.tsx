@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowDown, Loader2, Download } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useProfile } from "@/integrations/supabase/hooks";
 
 export const Hero = () => {
@@ -12,122 +11,142 @@ export const Hero = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-portfolio-bg">
+        <Loader2 className="w-8 h-8 animate-spin text-portfolio-accent" />
       </div>
     );
   }
 
+  const nameParts = profile?.full_name ? profile.full_name.split(" ") : ["John", "Doe"];
+  const firstName = nameParts[0];
+  const lastName = nameParts.slice(1).join(" ");
+
   return (
-    <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Animated background gradient orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 90, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity }}
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.2, 1, 1.2],
-            rotate: [90, 0, 90],
-          }}
-          transition={{ duration: 15, repeat: Infinity }}
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-3xl"
-        />
+    <section id="home" className="min-h-screen relative flex items-center bg-portfolio-bg overflow-hidden pt-20">
+      {/* Arc SVG Background */}
+      <div className="arc-bg">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <circle cx="100" cy="0" r="50" stroke="currentColor" strokeWidth="0.5" />
+          <circle cx="100" cy="0" r="70" stroke="currentColor" strokeWidth="0.5" />
+          <circle cx="100" cy="0" r="90" stroke="currentColor" strokeWidth="0.5" />
+        </svg>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8 inline-block"
-          >
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-2xl opacity-50 animate-glow-pulse" />
+      <div className="container mx-auto px-4 relative z-10 h-full flex flex-col justify-center">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+          
+          {/* Left Side (60%) */}
+          <div className="w-full md:w-[60%] flex flex-col">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.1 } },
+                hidden: {}
+              }}
+              className="flex flex-col"
+            >
+              <motion.span 
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+                className="text-portfolio-text-sec text-lg tracking-widest uppercase mb-4"
+              >
+                I'M
+              </motion.span>
+
+              <div className="font-display font-black text-6xl md:text-8xl leading-none mb-6">
+                <motion.div 
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  className="text-white"
+                >
+                  {firstName}
+                </motion.div>
+                <motion.div 
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  className="text-portfolio-accent"
+                >
+                  {lastName}
+                </motion.div>
+              </div>
+
+              <motion.p
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+                className="text-portfolio-text-sec text-base md:text-lg max-w-lg mb-10"
+              >
+                {profile?.bio || profile?.title || "Full Stack Developer shaping the future of the web with modern UI/UX and scalable architectures."}
+              </motion.p>
+
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => scrollToSection("contact")}
+                  className="bg-portfolio-accent text-portfolio-bg px-8 py-4 rounded-full font-bold text-lg inline-flex items-center gap-2 hover:brightness-110 transition-all"
+                >
+                  Contact +
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Right Side (40%) */}
+          <div className="w-full md:w-[40%] relative">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="relative w-full aspect-[3/4] md:aspect-[3/4] max-w-sm mx-auto"
+            >
               <img
                 src={profile?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"}
                 alt="Profile"
-                className="relative w-32 h-32 rounded-full border-4 border-primary/50 glow-cyan object-cover"
+                className="w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-700"
               />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-          >
-            <h1 className="text-5xl md:text-7xl font-bold mb-4">
-              Hi, I'm <span className="gradient-text">{profile?.full_name || "John Doe"}</span>
-            </h1>
-          </motion.div>
-
-          <motion.p
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-xl md:text-2xl text-foreground/70 mb-8 max-w-2xl mx-auto"
-          >
-            {profile?.title || "Full Stack Developer • UI/UX Enthusiast • Problem Solver"}
-          </motion.p>
-
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-            className="flex flex-wrap gap-4 justify-center"
-          >
-            <Button
-              onClick={() => scrollToSection("projects")}
-              size="lg"
-              className="glass-strong hover:glow-cyan text-lg px-8 py-6 rounded-2xl border-2 border-primary/50"
-            >
-              View Projects
-            </Button>
-            <Button
-              onClick={() => scrollToSection("contact")}
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-6 rounded-2xl border-2 border-secondary/50 hover:glow-purple"
-            >
-              Contact Me
-            </Button>
-            {profile?.resume_url && (
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="text-lg px-8 py-6 rounded-2xl border-2 border-primary/50 hover:glow-cyan"
+              
+              {/* Floating Stat Card 1 */}
+              <motion.div 
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -left-10 top-20 glass-card p-4 flex flex-col shadow-xl"
               >
-                <a href={profile.resume_url} target="_blank" rel="noopener noreferrer">
-                  <Download className="w-5 h-5 mr-2" />
-                  Resume
-                </a>
-              </Button>
-            )}
-          </motion.div>
+                <span className="font-display font-bold text-2xl text-white">10k+</span>
+                <span className="text-portfolio-text-sec text-xs uppercase tracking-wider">Completed<br/>project</span>
+              </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.6 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          >
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <ArrowDown className="w-6 h-6 text-primary" />
+              {/* Floating Stat Card 2 */}
+              <motion.div 
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -right-8 bottom-20 glass-card p-4 flex flex-col shadow-xl"
+              >
+                <span className="font-display font-bold text-2xl text-white">900+</span>
+                <span className="text-portfolio-text-sec text-xs uppercase tracking-wider">Client<br/>review</span>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
       </div>
+      
+      {/* Bottom Horizontal Rule */}
+      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-portfolio-border" />
     </section>
   );
 };

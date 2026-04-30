@@ -13,6 +13,8 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
+  LogOut,
+  Globe,
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,6 +27,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, end: true },
@@ -44,6 +49,17 @@ const menuItems = [
 
 export const AdminSidebar = () => {
   const { state } = useSidebar();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error: any) {
+      toast.error("Error logging out");
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -77,6 +93,23 @@ export const AdminSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <div className="p-4 border-t border-primary/20 mt-auto flex flex-col gap-2">
+        <SidebarMenuButton 
+          onClick={() => navigate("/")}
+          className="w-full text-portfolio-muted hover:text-white hover:bg-primary/10 rounded-xl transition-all font-medium flex items-center gap-2"
+        >
+          <Globe className="w-5 h-5" />
+          {state !== "collapsed" && <span>View Portfolio</span>}
+        </SidebarMenuButton>
+
+        <SidebarMenuButton 
+          onClick={handleLogout}
+          className="w-full text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-medium flex items-center gap-2"
+        >
+          <LogOut className="w-5 h-5" />
+          {state !== "collapsed" && <span>Logout</span>}
+        </SidebarMenuButton>
+      </div>
     </Sidebar>
   );
 };

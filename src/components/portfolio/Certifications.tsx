@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Award, ExternalLink, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useCertifications } from "@/integrations/supabase/hooks";
 
 export const Certifications = () => {
@@ -8,77 +7,77 @@ export const Certifications = () => {
 
   if (isLoading) {
     return (
-      <div className="py-20 flex justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="py-24 flex justify-center bg-portfolio-bg">
+        <Loader2 className="w-8 h-8 animate-spin text-portfolio-accent" />
       </div>
     );
   }
 
   return (
-    <section id="certifications" className="py-20 relative">
+    <section id="certifications" className="py-24 bg-portfolio-bg">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold gradient-text mb-4">Certifications</h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
+          <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-4">
+            Certifications
+          </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {certifications?.map((cert, index) => (
             <motion.div
               key={cert.id}
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -5 }}
-              className="glass-strong p-6 rounded-2xl border border-primary/20 glow-hover-cyan text-center group"
+              className="glass-card p-6 flex flex-col items-center text-center group border border-portfolio-border hover:border-portfolio-border-accent transition-all"
             >
-              <div className="relative mx-auto w-32 h-32 mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative w-24 h-24 mb-6 shrink-0">
                 {cert.image_url ? (
-                  <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-primary/30">
+                  <div className="w-full h-full rounded-2xl overflow-hidden border border-portfolio-border bg-portfolio-secondary">
                     <img 
                       src={cert.image_url} 
                       alt={cert.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>
                 ) : (
-                  <div className="relative w-full h-full rounded-full border-2 border-primary/30 p-2 glass">
-                    <Award className="w-full h-full text-primary" />
+                  <div className="w-full h-full rounded-2xl border border-portfolio-border bg-portfolio-secondary flex items-center justify-center transition-colors group-hover:border-portfolio-border-accent group-hover:bg-portfolio-accent/5">
+                    <Award className="w-10 h-10 text-portfolio-muted group-hover:text-portfolio-accent transition-colors" />
                   </div>
                 )}
               </div>
 
-              <h3 className="font-bold mb-2 text-sm group-hover:gradient-text transition-all">
+              <h3 className="font-display font-bold text-lg text-white mb-2 group-hover:text-portfolio-accent transition-colors">
                 {cert.name}
               </h3>
-              <p className="text-xs text-foreground/60 mb-1">{cert.issuer}</p>
-              <p className="text-xs text-foreground/40 mb-4">{cert.issue_date}</p>
+              <p className="text-portfolio-text-sec text-sm mb-1">{cert.issuer}</p>
+              <p className="text-portfolio-muted text-xs mb-6">{cert.issue_date}</p>
 
               {cert.credential_url && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full rounded-xl border-primary/50 hover:glow-cyan text-xs"
-                  asChild
-                >
-                  <a href={cert.credential_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-3 h-3 mr-2" />
+                <div className="mt-auto w-full pt-4 border-t border-portfolio-border">
+                  <a 
+                    href={cert.credential_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 text-sm font-bold text-portfolio-text-sec group-hover:text-white transition-colors"
+                  >
                     View Credential
+                    <ExternalLink className="w-4 h-4" />
                   </a>
-                </Button>
+                </div>
               )}
             </motion.div>
           ))}
           {certifications?.length === 0 && (
-            <div className="col-span-full text-center text-foreground/50">
+            <div className="col-span-full text-portfolio-muted text-lg py-12">
               No certifications to display.
             </div>
           )}

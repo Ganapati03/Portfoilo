@@ -1,8 +1,5 @@
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Mail, Loader2, ArrowRight } from "lucide-react";
 import { useProfile, useSendMessage } from "@/integrations/supabase/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -35,108 +32,96 @@ export const Contact = () => {
   };
 
   return (
-    <section id="contact" className="py-20 relative">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold gradient-text mb-4">Get In Touch</h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+    <section id="contact" className="py-24 relative bg-portfolio-bg">
+      <div className="container mx-auto px-4 max-w-6xl">
+        
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-6"
+            transition={{ duration: 0.6 }}
+            className="space-y-8 flex flex-col justify-center"
           >
-            <h3 className="text-2xl font-bold mb-6">Let's work together</h3>
-            <p className="text-foreground/70 mb-8">
-              Have a project in mind? Let's discuss how I can help bring your ideas to life.
-            </p>
+            <div>
+              <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight">
+                Let's Build<br/>
+                Something<br/>
+                <span className="text-portfolio-accent">Together.</span>
+              </h2>
+              <p className="text-portfolio-text-sec text-lg leading-relaxed max-w-md">
+                Have a project in mind or want to explore an opportunity? Feel free to reach out. I'm always open to discussing new projects, creative ideas, or opportunities to be part of your visions.
+              </p>
+            </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 glass p-4 rounded-xl border border-primary/20">
-                <div className="p-3 rounded-lg bg-primary/20">
-                  <Mail className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <div className="text-sm text-foreground/50">Email</div>
-                  <div className="font-medium">{profile?.email || "john.doe@example.com"}</div>
-                </div>
+            <div className="flex items-center gap-6 pt-6 border-t border-portfolio-border">
+              <div className="w-14 h-14 rounded-full bg-portfolio-card flex items-center justify-center border border-portfolio-border">
+                <Mail className="w-6 h-6 text-portfolio-accent" />
               </div>
-
-              {/* 
-              <div className="flex items-center gap-4 glass p-4 rounded-xl border border-secondary/20">
-                <div className="p-3 rounded-lg bg-secondary/20">
-                  <Phone className="w-5 h-5 text-secondary" />
-                </div>
-                <div>
-                  <div className="text-sm text-foreground/50">Phone</div>
-                  <div className="font-medium">+1 (555) 123-4567</div>
-                </div>
+              <div>
+                <div className="text-sm font-medium text-portfolio-muted uppercase tracking-wider mb-1">Direct Email</div>
+                <a href={`mailto:${profile?.email || "hello@example.com"}`} className="text-white font-display text-xl hover:text-portfolio-accent transition-colors">
+                  {profile?.email || "hello@example.com"}
+                </a>
               </div>
-
-              <div className="flex items-center gap-4 glass p-4 rounded-xl border border-primary/20">
-                <div className="p-3 rounded-lg bg-primary/20">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <div className="text-sm text-foreground/50">Location</div>
-                  <div className="font-medium">San Francisco, CA</div>
-                </div>
-              </div> 
-              */}
             </div>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <form onSubmit={handleSubmit} className="glass-strong p-6 rounded-2xl border border-primary/20 space-y-4">
-              <div>
-                <Input
-                  placeholder="Your Name"
-                  className="glass border-primary/30 rounded-xl"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+            <form onSubmit={handleSubmit} className="bg-portfolio-card p-8 md:p-10 rounded-[2rem] border border-portfolio-border shadow-2xl space-y-6">
+              <h3 className="text-2xl font-display font-bold text-white mb-8">Send a Message</h3>
+              
+              <div className="space-y-5">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    className="w-full bg-portfolio-bg border border-portfolio-border rounded-xl px-5 py-4 text-white focus:outline-none focus:border-portfolio-accent focus:ring-1 focus:ring-portfolio-accent transition-all placeholder:text-portfolio-muted"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Your Email"
+                    className="w-full bg-portfolio-bg border border-portfolio-border rounded-xl px-5 py-4 text-white focus:outline-none focus:border-portfolio-accent focus:ring-1 focus:ring-portfolio-accent transition-all placeholder:text-portfolio-muted"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <textarea
+                    placeholder="Tell me about your project..."
+                    rows={5}
+                    className="w-full bg-portfolio-bg border border-portfolio-border rounded-xl px-5 py-4 text-white focus:outline-none focus:border-portfolio-accent focus:ring-1 focus:ring-portfolio-accent transition-all resize-none placeholder:text-portfolio-muted"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  />
+                </div>
               </div>
-              <div>
-                <Input
-                  type="email"
-                  placeholder="Your Email"
-                  className="glass border-primary/30 rounded-xl"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-              <div>
-                <Textarea
-                  placeholder="Your Message"
-                  rows={5}
-                  className="glass border-primary/30 rounded-xl resize-none"
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                />
-              </div>
-              <Button
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
+                className="w-full bg-portfolio-accent text-portfolio-bg rounded-full py-4 font-bold text-lg mt-4 flex items-center justify-center gap-2 hover:brightness-110 transition-all disabled:opacity-70"
                 disabled={sendMessage.isPending}
               >
-                {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Send Message
-              </Button>
+                {sendMessage.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    Send Message
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </motion.button>
             </form>
           </motion.div>
         </div>

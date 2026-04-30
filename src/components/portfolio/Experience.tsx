@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Trophy, Calendar, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useExperience } from "@/integrations/supabase/hooks";
 
 export const Experience = () => {
@@ -7,68 +7,72 @@ export const Experience = () => {
 
   if (isLoading) {
     return (
-      <div className="py-20 flex justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="py-24 flex justify-center bg-portfolio-bg">
+        <Loader2 className="w-8 h-8 animate-spin text-portfolio-accent" />
       </div>
     );
   }
 
   return (
-    <section id="experience" className="py-20 relative">
-      <div className="container mx-auto px-4">
+    <section id="experience" className="py-24 bg-portfolio-bg">
+      <div className="container mx-auto px-4 max-w-5xl">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold gradient-text mb-4">Experience</h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
+          <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-4">
+            Experience
+          </h2>
         </motion.div>
 
-        <div className="relative max-w-4xl mx-auto">
-          {/* Timeline line */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-secondary to-primary hidden md:block" />
+        <div className="relative border-l border-portfolio-border-accent/50 ml-4 md:ml-6 space-y-12 pb-8">
+          {experiences?.map((exp, index) => (
+            <motion.div
+              key={exp.id}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="relative pl-8 md:pl-16"
+            >
+              {/* Timeline dot */}
+              <div className="absolute -left-[5px] md:-left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-portfolio-accent shadow-[0_0_10px_rgba(0,217,126,0.5)]" />
 
-          <div className="space-y-12">
-            {experiences?.map((exp, index) => (
-              <motion.div
-                key={exp.id}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`relative flex items-center ${
-                  index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-                } flex-col`}
-              >
-                {/* Timeline dot */}
-                <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-primary glow-cyan z-10 hidden md:block" />
-
-                <div className={`w-full md:w-[calc(50%-2rem)] ${index % 2 === 0 ? "md:pr-8" : "md:pl-8"}`}>
-                  <div className="glass-strong p-6 rounded-2xl border border-primary/20 glow-hover-cyan">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-primary/20 text-primary">
-                        <Calendar className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-1">{exp.position}</h3>
-                        <p className="text-sm text-primary">{exp.company}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-foreground/50 mb-3">{exp.duration}</p>
-                    <p className="text-foreground/70 text-sm">{exp.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-            {experiences?.length === 0 && (
-              <div className="text-center text-foreground/50">
-                No experience added yet.
+              <div className="flex flex-col md:flex-row md:justify-between md:items-baseline mb-3 gap-2">
+                <h3 className="text-2xl font-display font-bold text-white">
+                  {exp.position}
+                </h3>
+                <span className="text-portfolio-accent font-medium text-sm shrink-0 bg-portfolio-accent-dim px-3 py-1 rounded-full border border-portfolio-border-accent">
+                  {exp.duration}
+                </span>
               </div>
-            )}
-          </div>
+              
+              <p className="text-portfolio-text-sec font-medium mb-4 text-lg">
+                {exp.company}
+              </p>
+              
+              <p className="text-portfolio-text-sec/80 leading-relaxed max-w-3xl mb-6">
+                {exp.description}
+              </p>
+
+              {/* Decorative skill/progress bar */}
+              <div className="max-w-xs h-1 bg-portfolio-secondary rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-portfolio-accent" 
+                  style={{ width: `${Math.random() * 30 + 70}%` }} 
+                />
+              </div>
+            </motion.div>
+          ))}
+
+          {experiences?.length === 0 && (
+            <div className="pl-8 text-portfolio-muted text-lg">
+              No experience added yet.
+            </div>
+          )}
         </div>
       </div>
     </section>

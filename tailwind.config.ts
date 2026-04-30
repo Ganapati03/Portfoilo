@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ["Outfit", "sans-serif"],
+        body: ["DM Sans", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -26,6 +30,18 @@ export default {
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+        },
+        portfolio: {
+          bg: "var(--color-bg-primary)",
+          card: "var(--color-bg-card)",
+          "card-hover": "var(--color-bg-card-hover)",
+          accent: "var(--color-accent)",
+          "accent-dim": "var(--color-accent-dim)",
+          text: "var(--color-text-primary)",
+          "text-sec": "var(--color-text-secondary)",
+          muted: "var(--color-text-muted)",
+          border: "var(--color-border)",
+          "border-accent": "var(--color-border-accent)",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
