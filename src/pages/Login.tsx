@@ -52,15 +52,15 @@ const Login = () => {
           return;
         }
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: email.trim(),
+          password: password.trim(),
         });
         if (error) throw error;
         toast.success("Check your email for the confirmation link!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: email.trim(),
+          password: password.trim(),
         });
         if (error) throw error;
         toast.success("Successfully logged in!");
@@ -98,6 +98,9 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="glass border-primary/30"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
               />
             </div>
             <div className="space-y-2">
@@ -109,6 +112,9 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="glass border-primary/30"
+                autoCapitalize="none"
+                autoComplete="current-password"
+                autoCorrect="off"
               />
             </div>
             <Button

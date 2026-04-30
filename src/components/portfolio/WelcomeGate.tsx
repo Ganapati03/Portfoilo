@@ -17,6 +17,8 @@ export const WelcomeGate = () => {
     contact: ""
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleRoleSelection = (role: "recruiter" | "visitor") => {
     setFormData(prev => ({ ...prev, role }));
     if (role === "visitor") {
@@ -31,7 +33,11 @@ export const WelcomeGate = () => {
   };
 
   const submitForm = async () => {
+    if (isSubmitting) return; // Prevent double-clicking
+    
     if (formData.role === "recruiter") {
+      setIsSubmitting(true);
+      
       // 1. Send Email via Web3Forms
       try {
         await fetch("https://api.web3forms.com/submit", {
@@ -41,11 +47,12 @@ export const WelcomeGate = () => {
             Accept: "application/json",
           },
           body: JSON.stringify({
-            access_key: "ffcde521-a5c1-4e9c-9de1-c28772798826", // <-- PASTE YOUR KEY HERE
+            access_key: "ffcde521-a5c1-4e9c-9de1-c28772798826",
             subject: "New Portfolio Lead!",
             from_name: "Portfolio Assistant",
             name: formData.name,
-            email: formData.contact,
+            // We omit the "email" field in the root payload because if the user enters a phone number, Web3Forms blocks it.
+            // All details are safely in the message body.
             message: `You have a new recruiter lead!\n\nName: ${formData.name}\nCompany: ${formData.company}\nContact Info: ${formData.contact}`
           }),
         });
@@ -56,15 +63,18 @@ export const WelcomeGate = () => {
       // 2. Save to Supabase Database
       sendMessage.mutate({
         name: formData.name,
-        email: formData.contact,
+        // We ensure Supabase receives something for email, even if it's a phone number. 
+        email: formData.contact || "No contact provided",
         message: `[Automated Lead]\nCompany: ${formData.company}\nRole: ${formData.role}\nContact: ${formData.contact}`
       }, {
         onSuccess: () => {
           console.log("Recruiter lead saved successfully");
+          setIsSubmitting(false);
           setStep("done");
         },
         onError: () => {
           toast.error("There was an issue saving your details, but welcome anyway!");
+          setIsSubmitting(false);
           setStep("done");
         }
       });
@@ -202,8 +212,12 @@ export const WelcomeGate = () => {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setStep("name")} className="border-portfolio-border text-white w-1/3 hover:bg-portfolio-secondary">Edit</Button>
-                <Button onClick={submitForm} className="w-2/3 bg-portfolio-accent text-portfolio-bg hover:bg-portfolio-accent/90">
-                  Confirm
+                <Button 
+                  onClick={submitForm} 
+                  disabled={isSubmitting}
+                  className="w-2/3 bg-portfolio-accent text-portfolio-bg hover:bg-portfolio-accent/90"
+                >
+                  {isSubmitting ? "Sending..." : "Confirm"}
                 </Button>
               </div>
             </motion.div>
