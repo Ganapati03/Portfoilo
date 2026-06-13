@@ -1,9 +1,9 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Admin = () => {
@@ -50,15 +50,28 @@ const Admin = () => {
 
         <AdminSidebar />
         
-        <main className="flex-1 overflow-auto relative z-10 p-6 md:p-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="h-full"
-          >
-            <Outlet />
-          </motion.div>
+        <main className="flex-1 overflow-auto relative z-10 flex flex-col w-full">
+          {/* Mobile Header with Hamburger Menu */}
+          <div className="md:hidden flex items-center justify-between p-4 border-b border-white/10 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
+            <h2 className="font-display font-black tracking-widest uppercase text-xl">
+              <span className="text-white">Quantum</span>
+              <span className="text-accent">.</span>
+            </h2>
+            <SidebarTrigger className="text-white hover:text-accent p-2">
+              <Menu className="w-6 h-6" />
+            </SidebarTrigger>
+          </div>
+
+          <div className="flex-1 p-4 md:p-10 w-full max-w-[100vw] overflow-x-hidden">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </div>
         </main>
       </div>
     </SidebarProvider>
