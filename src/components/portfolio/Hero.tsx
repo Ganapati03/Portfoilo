@@ -1,152 +1,170 @@
-import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { Loader2, Volume2, VolumeX } from "lucide-react";
 import { useProfile } from "@/integrations/supabase/hooks";
+import ScrollyCanvas from "./ScrollyCanvas";
 
 export const Hero = () => {
   const { data: profile, isLoading } = useProfile();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  const phase1Opacity = useTransform(smoothProgress, [0, 0.1, 0.2, 0.25], [1, 1, 1, 0]);
+  const phase1Y = useTransform(smoothProgress, [0, 0.25], [0, -50]);
+  const phase2Opacity = useTransform(smoothProgress, [0.25, 0.35, 0.45, 0.5], [0, 1, 1, 0]);
+  const phase2Y = useTransform(smoothProgress, [0.25, 0.5], [50, -50]);
+  const phase3Opacity = useTransform(smoothProgress, [0.5, 0.6, 0.7, 0.75], [0, 1, 1, 0]);
+  const phase3Y = useTransform(smoothProgress, [0.5, 0.75], [50, -50]);
+  const phase4Opacity = useTransform(smoothProgress, [0.75, 0.85, 1], [0, 1, 1]);
+  const phase4Y = useTransform(smoothProgress, [0.75, 1], [50, 0]);
+
+  // Ambient audio logic (auto-play on WelcomeGate close)
+  useEffect(() => {
+    const audio = new Audio("/hero-ambient.wav");
+    audio.loop = false;
+    audio.preload = "auto";
+    audio.volume = 1.0;
+    audioRef.current = audio;
+
+    const onWelcomeClose = () => {
+      audio.play().then(() => {
+        setIsPlaying(true);
+      }).catch(err => {
+        console.warn("Autoplay blocked. User interaction required:", err);
+      });
+    };
+
+    const onAudioEnded = () => {
+      setIsPlaying(false);
+    };
+
+    window.addEventListener("welcomeGateClosed", onWelcomeClose);
+    audio.addEventListener("ended", onAudioEnded);
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+      audioRef.current = null;
+      window.removeEventListener("welcomeGateClosed", onWelcomeClose);
+      audio.removeEventListener("ended", onAudioEnded);
+    };
+  }, []);
+
+  const handleToggleAudio = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play()
+        .then(() => setIsPlaying(true))
+        .catch(console.error);
+    }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-portfolio-bg">
-        <Loader2 className="w-8 h-8 animate-spin text-portfolio-accent" />
-      </div>
-    );
-  }
 
   const nameParts = profile?.full_name ? profile.full_name.split(" ") : ["John", "Doe"];
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(" ");
 
   return (
-    <section id="home" className="min-h-screen relative flex items-center bg-portfolio-bg overflow-hidden pt-20">
-      {/* Arc SVG Background */}
-      <div className="arc-bg">
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <circle cx="100" cy="0" r="50" stroke="currentColor" strokeWidth="0.5" />
-          <circle cx="100" cy="0" r="70" stroke="currentColor" strokeWidth="0.5" />
-          <circle cx="100" cy="0" r="90" stroke="currentColor" strokeWidth="0.5" />
-        </svg>
-      </div>
+    <section ref={containerRef} id="home" className="relative w-full h-[500vh] bg-background">
+      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-background z-50">
+            <Loader2 className="w-8 h-8 animate-spin text-accent" />
+          </div>
+        ) : (
+          <>
+            <div className="absolute inset-0 z-0">
+              <ScrollyCanvas scrollContainerRef={containerRef} frameCount={120} />
+            </div>
 
-      <div className="container mx-auto px-4 relative z-10 h-full flex flex-col justify-center">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-          
-          {/* Left Side (60%) */}
-          <div className="w-full md:w-[60%] flex flex-col">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={{
-                visible: { transition: { staggerChildren: 0.1 } },
-                hidden: {}
-              }}
-              className="flex flex-col"
-            >
-              <motion.span 
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 }
-                }}
-                className="text-portfolio-text-sec text-lg tracking-widest uppercase mb-4"
-              >
-                I'M
-              </motion.span>
-
-              <div className="font-display font-black text-6xl md:text-8xl leading-none mb-6">
-                <motion.div 
-                  variants={{
-                    hidden: { opacity: 0, y: 20 },
-                    visible: { opacity: 1, y: 0 }
-                  }}
-                  className="text-white"
-                >
-                  {firstName}
-                </motion.div>
-                <motion.div 
-                  variants={{
-                    hidden: { opacity: 0, y: 20 },
-                    visible: { opacity: 1, y: 0 }
-                  }}
-                  className="text-portfolio-accent"
-                >
-                  {lastName}
-                </motion.div>
-              </div>
-
-              <motion.p
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 }
-                }}
-                className="text-portfolio-text-sec text-base md:text-lg max-w-lg mb-10"
-              >
-                {profile?.bio || profile?.title || "Full Stack Developer shaping the future of the web with modern UI/UX and scalable architectures."}
-              </motion.p>
+            <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
 
               <motion.div
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 }
-                }}
+                style={{ opacity: phase1Opacity, y: phase1Y }}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
               >
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => scrollToSection("contact")}
-                  className="bg-portfolio-accent text-portfolio-bg px-8 py-4 rounded-full font-bold text-lg inline-flex items-center gap-2 hover:brightness-110 transition-all"
-                >
-                  Contact +
-                </motion.button>
+                <h1 className="font-display font-black text-[15vw] leading-[0.9] text-white/5 tracking-[-0.04em] uppercase whitespace-nowrap">
+                  {profile?.full_name || "DEVELOPER"}
+                </h1>
               </motion.div>
-            </motion.div>
-          </div>
 
-          {/* Right Side (40%) */}
-          <div className="w-full md:w-[40%] relative">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative w-full aspect-[3/4] md:aspect-[3/4] max-w-sm mx-auto"
+              <motion.div
+                style={{ opacity: phase2Opacity, y: phase2Y }}
+                className="absolute inset-0 flex flex-col items-center justify-center text-center px-4"
+              >
+                <span className="font-display font-medium text-portfolio-muted text-xl tracking-[0.1em] uppercase mb-6">
+                  {profile?.title || "Creative Developer"}
+                </span>
+                <div className="font-display font-extrabold text-4xl sm:text-6xl md:text-8xl tracking-[-0.04em] leading-[0.9] text-white mb-4">
+                  Hi, I'm {firstName} <span className="text-accent">{lastName}</span>
+                </div>
+              </motion.div>
+
+              <motion.div
+                style={{ opacity: phase3Opacity, y: phase3Y }}
+                className="absolute inset-0 flex items-center justify-center text-center px-4"
+              >
+                <h2 className="font-display font-bold text-2xl sm:text-4xl md:text-7xl leading-[1.1] tracking-[-0.03em] text-white max-w-4xl">
+                  {profile?.bio?.split('.')[0] || "Full Stack Developer & Creative Problem Solver"}
+                </h2>
+              </motion.div>
+
+              <motion.div
+                style={{ opacity: phase4Opacity, y: phase4Y }}
+                className="absolute inset-0 flex flex-col items-center justify-center text-center px-4"
+              >
+                <h2 className="font-display font-bold text-2xl sm:text-3xl md:text-6xl leading-[1.1] tracking-[-0.03em] text-white max-w-3xl mb-8 sm:mb-12">
+                  Building Modern Digital Experiences <br className="hidden sm:block" />
+                  <span className="text-portfolio-muted italic font-body font-normal text-xl sm:text-2xl md:text-4xl mt-3 block leading-[1.6]">
+                    Through Code & Innovation
+                  </span>
+                </h2>
+                <div className="pointer-events-auto">
+                  <button
+                    onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
+                    className="bg-accent/10 border border-accent/50 text-white px-8 py-4 rounded-full font-display font-semibold tracking-[0.12em] text-sm uppercase hover:bg-accent hover:text-black transition-all duration-300 backdrop-blur-md"
+                  >
+                    Discover More
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Ambient audio toggle — z-50 ensures it's always on top and clickable */}
+            <button
+              onClick={handleToggleAudio}
+              title={isPlaying ? "Pause ambient audio" : "Play ambient audio"}
+              className="absolute top-32 right-8 md:right-12 z-50 w-12 h-12 rounded-full bg-black/40 border border-white/20 backdrop-blur-md flex items-center justify-center hover:bg-accent hover:border-accent hover:text-black text-white transition-all duration-300 group"
             >
-              <img
-                src={profile?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"}
-                alt="Profile"
-                className="w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-700"
-              />
-              
-              {/* Floating Stat Card 1 */}
-              <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -left-10 top-20 glass-card p-4 flex flex-col shadow-xl"
-              >
-                <span className="font-display font-bold text-2xl text-white">10k+</span>
-                <span className="text-portfolio-text-sec text-xs uppercase tracking-wider">Completed<br/>project</span>
-              </motion.div>
-
-              {/* Floating Stat Card 2 */}
-              <motion.div 
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -right-8 bottom-20 glass-card p-4 flex flex-col shadow-xl"
-              >
-                <span className="font-display font-bold text-2xl text-white">900+</span>
-                <span className="text-portfolio-text-sec text-xs uppercase tracking-wider">Client<br/>review</span>
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
+              {isPlaying ? (
+                <Volume2 className="w-5 h-5" />
+              ) : (
+                <VolumeX className="w-5 h-5" />
+              )}
+              {isPlaying && (
+                <span className="absolute inset-0 rounded-full border border-accent animate-ping opacity-40 pointer-events-none" />
+              )}
+            </button>
+          </>
+        )}
       </div>
-      
-      {/* Bottom Horizontal Rule */}
-      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-portfolio-border" />
+
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </section>
   );
 };

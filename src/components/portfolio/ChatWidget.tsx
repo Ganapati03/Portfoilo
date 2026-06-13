@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Volume2, VolumeX, Globe } from "lucide-react";
+import { MessageCircle, X, Send, Volume2, VolumeX, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,7 +28,7 @@ type Message = {
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { text: "Hi! How can I help you today?", isBot: true },
+    { text: "Hi! I'm an AI assistant. How can I help you learn more about my creator?", isBot: true },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -80,13 +80,11 @@ export const ChatWidget = () => {
     let selectedVoice = null;
 
     if (language === 'en') {
-      // Jarvis-like voice selection strategy for English
       selectedVoice = voices.find(v => 
         (v.name.includes("UK") || v.name.includes("Great Britain") || v.lang.includes("en-GB")) && 
         !v.name.includes("Female")
       ) || voices.find(v => v.lang.includes("en-GB")) || voices.find(v => v.lang.includes("en-US"));
     } else {
-      // Find a voice that matches the selected language code
       selectedVoice = voices.find(v => v.lang.startsWith(language));
     }
 
@@ -94,7 +92,6 @@ export const ChatWidget = () => {
       utterance.voice = selectedVoice;
     }
 
-    // Adjust pitch/rate based on language/persona
     if (language === 'en') {
       utterance.pitch = 0.9;
       utterance.rate = 1.05;
@@ -119,79 +116,55 @@ export const ChatWidget = () => {
         throw new Error("Gemini API key not configured");
       }
 
-      // Construct context from all available data
       const knowledgeContext = knowledgeBase?.map(k => `${k.topic}: ${k.description}`).join("\n") || "";
-      
       const projectsContext = projects?.length 
         ? "\nProjects:\n" + projects.map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags?.join(', ')})`).join("\n") 
         : "";
-        
       const skillsContext = skills?.length 
         ? "\nSkills:\n" + skills.map(s => `- ${s.name} (${s.category})`).join("\n") 
         : "";
-        
       const experienceContext = experience?.length 
         ? "\nExperience:\n" + experience.map(e => `- ${e.position} at ${e.company} (${e.start_date} - ${e.current ? 'Present' : e.end_date})`).join("\n") 
         : "";
-
       const educationContext = education?.length
         ? "\nEducation:\n" + education.map(e => `- ${e.degree} in ${e.field_of_study} at ${e.institution}`).join("\n")
         : "";
-
       const certificationsContext = certifications?.length
         ? "\nCertifications:\n" + certifications.map(c => `- ${c.name} from ${c.issuer}`).join("\n")
         : "";
 
       const systemPrompt = `You are an AI assistant for ${profile.full_name}'s portfolio. 
-      
       Here is the comprehensive data about ${profile.full_name}:
-      
       ${knowledgeContext}
       ${projectsContext}
       ${skillsContext}
       ${experienceContext}
       ${educationContext}
       ${certificationsContext}
-      
       IMPORTANT: You must answer in ${LANGUAGES.find(l => l.code === language)?.name || 'English'}.
-      
       Answer the user's question based on this context. If the answer isn't in the context, politely say you don't know but suggest contacting ${profile.full_name} directly.
       Keep answers concise, professional, and engaging. Do not output markdown symbols like ** or # in your response as it will be spoken aloud.`;
 
-      console.log("Sending request to Gemini API...");
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${profile.gemini_api_key}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }]
-          }]
+          contents: [{ parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }] }]
         })
       });
 
-      console.log("Response status:", response.status);
       const data = await response.json();
-      console.log("Response data:", data);
       
       if (!response.ok || data.error) {
-        const errorMsg = data.error?.message || `API returned status ${response.status}`;
-        throw new Error(errorMsg);
+        throw new Error(data.error?.message || `API returned status ${response.status}`);
       }
 
       const botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't generate a response.";
 
-      setMessages((prev) => [
-        ...prev,
-        { text: botResponse, isBot: true },
-      ]);
-
+      setMessages((prev) => [...prev, { text: botResponse, isBot: true }]);
       speak(botResponse);
     } catch (error: any) {
-      console.error("Chat error:", error);
       let errorMessage = "I'm having trouble connecting right now. Please try again later.";
-      
       if (!profile?.gemini_api_key) {
         errorMessage = "My AI brain hasn't been configured yet! Please add a Gemini API key in the Admin Settings.";
       } else if (error.message.includes("API_KEY_INVALID") || error.message.includes("400")) {
@@ -199,11 +172,7 @@ export const ChatWidget = () => {
       } else if (error.message) {
         errorMessage = `Error: ${error.message}`;
       }
-
-      setMessages((prev) => [
-        ...prev,
-        { text: errorMessage, isBot: true },
-      ]);
+      setMessages((prev) => [...prev, { text: errorMessage, isBot: true }]);
     } finally {
       setIsTyping(false);
     }
@@ -211,55 +180,67 @@ export const ChatWidget = () => {
 
   return (
     <>
-      {/* Chat Button */}
       <motion.button
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-portfolio-accent flex items-center justify-center text-portfolio-bg shadow-[0_0_20px_rgba(0,217,126,0.5)]"
+        className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-accent/90 backdrop-blur-md flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,107,53,0.3)] border border-white/20 transition-all hover:shadow-[0_0_40px_rgba(255,107,53,0.5)] group"
       >
-        {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+        <AnimatePresence mode="wait">
+          {isOpen ? (
+            <motion.div key="close" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: 90 }}>
+              <X className="w-7 h-7 text-black" />
+            </motion.div>
+          ) : (
+            <motion.div key="chat" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: -90 }} className="relative">
+              <Sparkles className="absolute -top-2 -right-2 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-white" />
+              <MessageCircle className="w-7 h-7 text-black" />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.button>
 
-      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 w-[380px] max-w-[calc(100vw-3rem)] md:w-96 z-50"
+            className="fixed inset-0 md:inset-auto md:bottom-28 md:right-6 md:w-[400px] z-50 flex flex-col"
           >
-            <div className="bg-portfolio-card rounded-2xl border border-portfolio-border overflow-hidden shadow-2xl">
+            <div className="flex-1 md:flex-none glass-card bg-black/60 backdrop-blur-xl border border-white/10 md:rounded-3xl overflow-hidden shadow-2xl flex flex-col h-full md:h-[600px] max-h-screen">
+              
               {/* Header */}
-                <div className="p-4 border-b border-portfolio-border bg-portfolio-secondary flex justify-between items-center">
-                  <div>
-                    <h3 className="font-display font-bold text-white">AI Assistant</h3>
-                    <p className="text-xs text-portfolio-muted">Always here to help</p>
+              <div className="p-5 border-b border-white/10 bg-white/5 flex justify-between items-center backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center border border-accent/30 relative">
+                    <Sparkles className="w-5 h-5 text-accent" />
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black" />
                   </div>
+                  <div>
+                    <h3 className="font-display font-bold text-white text-lg leading-none mb-1">AI Assistant</h3>
+                    <p className="text-xs text-portfolio-muted font-medium">Online • Powered by Gemini</p>
+                  </div>
+                </div>
+                
                 <div className="flex items-center gap-1">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-primary/20"
-                        title="Select Language"
-                      >
-                        <Globe className="w-4 h-4 text-portfolio-text-sec" />
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-white/10" title="Select Language">
+                        <Globe className="w-4 h-4 text-portfolio-muted" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-portfolio-card border border-portfolio-border text-white">
+                    <DropdownMenuContent align="end" className="bg-black/90 backdrop-blur-xl border border-white/10 text-white rounded-xl">
                       {LANGUAGES.map((lang) => (
                         <DropdownMenuItem
                           key={lang.code}
                           onClick={() => setLanguage(lang.code)}
-                          className={`cursor-pointer focus:bg-portfolio-secondary ${language === lang.code ? "bg-portfolio-secondary" : ""}`}
+                          className={`cursor-pointer focus:bg-white/10 rounded-lg ${language === lang.code ? "bg-white/10 text-accent" : ""}`}
                         >
                           <span className="mr-2">{lang.native}</span>
-                          <span className="text-xs text-portfolio-muted">({lang.name})</span>
+                          <span className="text-xs text-white/50">({lang.name})</span>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -268,61 +249,53 @@ export const ChatWidget = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 hover:bg-primary/20"
+                    className="h-9 w-9 rounded-full hover:bg-white/10"
                     onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
                     title={isVoiceEnabled ? "Mute Voice" : "Enable Voice"}
                   >
-                    {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-portfolio-accent" /> : <VolumeX className="w-4 h-4 text-portfolio-muted" />}
+                    {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-accent" /> : <VolumeX className="w-4 h-4 text-portfolio-muted" />}
+                  </Button>
+
+                  <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 rounded-full hover:bg-white/10" onClick={() => setIsOpen(false)}>
+                    <X className="w-5 h-5 text-portfolio-muted" />
                   </Button>
                 </div>
               </div>
 
-              {/* Messages */}
-              <ScrollArea className="h-96 p-4">
-                <div className="space-y-4">
+              {/* Messages Area */}
+              <ScrollArea className="flex-1 p-5">
+                <div className="space-y-6">
                   {messages.map((message, index) => (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
                       className={`flex ${message.isBot ? "justify-start" : "justify-end"}`}
                     >
                       <div
-                        className={`max-w-[80%] p-3 rounded-2xl ${
+                        className={`max-w-[85%] p-4 rounded-2xl md:rounded-3xl shadow-sm text-sm md:text-base leading-relaxed ${
                           message.isBot
-                            ? "glass border border-primary/20"
-                            : "bg-gradient-to-r from-primary to-secondary"
+                            ? "bg-white/10 text-white rounded-tl-sm border border-white/5"
+                            : "bg-accent text-black font-medium rounded-tr-sm"
                         }`}
                       >
-                        <p className="text-sm">{message.text}</p>
+                        <p className="whitespace-pre-wrap">{message.text}</p>
                       </div>
                     </motion.div>
                   ))}
                   
-                  {/* Typing indicator */}
                   {isTyping && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex justify-start"
-                    >
-                      <div className="bg-portfolio-secondary border border-portfolio-border p-3 rounded-2xl">
-                        <div className="flex gap-1">
-                          <motion.div
-                            animate={{ y: [0, -5, 0] }}
-                            transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-                            className="w-2 h-2 rounded-full bg-portfolio-text-sec"
-                          />
-                          <motion.div
-                            animate={{ y: [0, -5, 0] }}
-                            transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-                            className="w-2 h-2 rounded-full bg-portfolio-text-sec"
-                          />
-                          <motion.div
-                            animate={{ y: [0, -5, 0] }}
-                            transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-                            className="w-2 h-2 rounded-full bg-portfolio-text-sec"
-                          />
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+                      <div className="bg-white/10 border border-white/5 px-4 py-3 rounded-2xl rounded-tl-sm">
+                        <div className="flex gap-1.5 items-center h-4">
+                          {[0, 1, 2].map((i) => (
+                            <motion.div
+                              key={i}
+                              animate={{ y: ["0%", "-50%", "0%"] }}
+                              transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                              className="w-1.5 h-1.5 rounded-full bg-portfolio-muted"
+                            />
+                          ))}
                         </div>
                       </div>
                     </motion.div>
@@ -330,133 +303,38 @@ export const ChatWidget = () => {
                 </div>
               </ScrollArea>
 
-              {/* Input */}
-              <div className="p-4 border-t border-portfolio-border">
-                <div className="flex gap-2">
-                  <Input
+              {/* Input Area */}
+              <div className="p-4 border-t border-white/10 bg-black/40">
+                <div className="relative flex items-end gap-2 bg-white/5 border border-white/10 rounded-2xl p-1 focus-within:border-accent/50 transition-colors">
+                  <textarea
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                    placeholder="Type your message..."
-                    className="bg-portfolio-bg border-portfolio-border rounded-xl text-white focus-visible:ring-portfolio-accent"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    placeholder="Ask me anything..."
+                    className="flex-1 bg-transparent text-white px-3 py-3 max-h-32 min-h-[44px] resize-none focus:outline-none placeholder:text-portfolio-muted text-sm md:text-base"
+                    rows={1}
                   />
                   <Button
                     onClick={handleSend}
                     size="icon"
-                    className="rounded-xl bg-portfolio-accent text-portfolio-bg hover:bg-portfolio-accent/90"
+                    className="rounded-xl bg-accent text-black hover:bg-white w-10 h-10 shrink-0 transition-colors mb-0.5 mr-0.5"
+                    disabled={!inputValue.trim() || isTyping}
                   >
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Full Screen */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="md:hidden fixed inset-0 bg-background z-40"
-          >
-            {/* Same chat UI but full screen on mobile */}
-            <div className="h-full flex flex-col bg-portfolio-bg">
-              <div className="p-4 border-b border-portfolio-border bg-portfolio-secondary">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-display font-bold text-white">AI Assistant</h3>
-                    <p className="text-xs text-portfolio-muted">Always here to help</p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 hover:bg-primary/20"
-                        >
-                          <Globe className="w-4 h-4 text-portfolio-text-sec" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-portfolio-card border border-portfolio-border text-white">
-                        {LANGUAGES.map((lang) => (
-                          <DropdownMenuItem
-                            key={lang.code}
-                            onClick={() => setLanguage(lang.code)}
-                            className={`cursor-pointer focus:bg-portfolio-secondary ${language === lang.code ? "bg-portfolio-secondary" : ""}`}
-                          >
-                            <span className="mr-2">{lang.native}</span>
-                            <span className="text-xs text-portfolio-muted">({lang.name})</span>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 hover:bg-primary/20"
-                      onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                    >
-                      {isVoiceEnabled ? <Volume2 className="w-4 h-4 text-portfolio-accent" /> : <VolumeX className="w-4 h-4 text-portfolio-muted" />}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsOpen(false)}
-                      className="text-portfolio-text-sec"
-                    >
-                      <X className="w-5 h-5" />
-                    </Button>
-                  </div>
+                <div className="text-center mt-3">
+                  <span className="text-[10px] uppercase tracking-widest text-portfolio-muted font-bold">
+                    Powered by Google Gemini
+                  </span>
                 </div>
               </div>
 
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messages.map((message, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`flex ${message.isBot ? "justify-start" : "justify-end"}`}
-                    >
-                      <div
-                        className={`max-w-[80%] p-3 rounded-2xl ${
-                          message.isBot
-                            ? "bg-portfolio-secondary text-white border border-portfolio-border"
-                            : "bg-portfolio-accent text-portfolio-bg font-medium"
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              <div className="p-4 border-t border-portfolio-border">
-                <div className="flex gap-2">
-                  <Input
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                    placeholder="Type your message..."
-                    className="bg-portfolio-bg border-portfolio-border rounded-xl text-white focus-visible:ring-portfolio-accent"
-                  />
-                  <Button
-                    onClick={handleSend}
-                    size="icon"
-                    className="rounded-xl bg-portfolio-accent text-portfolio-bg hover:bg-portfolio-accent/90"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
             </div>
           </motion.div>
         )}

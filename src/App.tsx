@@ -4,6 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Portfolio from "./pages/Portfolio";
+import PublicBlogPage from "./pages/PublicBlogPage";
+import PublicServicesPage from "./pages/PublicServicesPage";
+import PublicProjectsPage from "./pages/PublicProjectsPage";
+import BlogPost from "./pages/BlogPost";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/admin/Dashboard";
 import HeroPage from "./pages/admin/HeroPage";
@@ -21,38 +25,46 @@ import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
+import { ReactLenis } from '@studio-freight/react-lenis';
+
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Portfolio />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/admin" element={<Admin />}>
-            <Route index element={<Dashboard />} />
-            <Route path="hero" element={<HeroPage />} />
-            <Route path="about" element={<AboutPage />} />
-            <Route path="skills" element={<SkillsPage />} />
-            <Route path="projects" element={<ProjectsPage />} />
-            <Route path="blog" element={<BlogPage />} />
-            <Route path="certifications" element={<CertificationsPage />} />
-            <Route path="experience" element={<ExperiencePage />} />
-            <Route path="education" element={<EducationPage />} />
-            <Route path="ai-knowledge" element={<AIKnowledgePage />} />
-            <Route path="messages" element={<MessagesPage />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ReactLenis root>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Portfolio />} />
+            <Route path="/blog" element={<PublicBlogPage />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/services" element={<PublicServicesPage />} />
+            <Route path="/projects" element={<PublicProjectsPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<Admin />}>
+              <Route index element={<Dashboard />} />
+              <Route path="hero" element={<HeroPage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="skills" element={<SkillsPage />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="blog" element={<BlogPage />} />
+              <Route path="certifications" element={<CertificationsPage />} />
+              <Route path="experience" element={<ExperiencePage />} />
+              <Route path="education" element={<EducationPage />} />
+              <Route path="ai-knowledge" element={<AIKnowledgePage />} />
+              <Route path="messages" element={<MessagesPage />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ReactLenis>
 );
 
 export default App;

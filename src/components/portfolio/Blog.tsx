@@ -1,178 +1,183 @@
-import { motion } from "framer-motion";
-import { Calendar, Clock, Eye, ArrowRight, Search, User } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { usePublishedBlogPosts } from "@/integrations/supabase/hooks";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { Calendar, ArrowRight, Search, Loader2 } from "lucide-react";
+import { usePublishedBlogPosts } from "@/integrations/supabase/hooks";
 
 const Blog = () => {
   const { data: posts, isLoading } = usePublishedBlogPosts();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   if (isLoading) {
     return (
-      <section id="blog" className="py-24 px-4 sm:px-6 lg:px-8 bg-portfolio-bg">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Skeleton className="h-12 w-48 mx-auto mb-4 bg-portfolio-card" />
-            <Skeleton className="h-6 w-96 mx-auto bg-portfolio-card" />
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-96 rounded-2xl bg-portfolio-card" />
-            ))}
-          </div>
-        </div>
+      <section id="blog" className="py-24 flex justify-center bg-[#0d0d0d]">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </section>
     );
   }
 
-  if (!posts || posts.length === 0) {
-    return null; // Don't show the section if there are no published posts
-  }
+  if (!posts || posts.length === 0) return null;
 
   const filteredPosts = posts.filter(post => 
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     post.excerpt?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const featuredPost = filteredPosts.length > 0 ? filteredPosts[0] : null;
+  const regularPosts = filteredPosts.slice(1);
+
   return (
-    <section id="blog" className="py-24 px-4 sm:px-6 lg:px-8 bg-portfolio-bg">
-      <div className="container mx-auto">
+    <section id="blog" className="py-32 px-4 sm:px-6 lg:px-8 bg-[#0d0d0d] relative overflow-hidden">
+      {/* Decorative Cinematic Lighting Orbs */}
+      <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-white/[0.02] rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="container mx-auto max-w-[1400px] relative z-10">
+        
+        {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6"
+          transition={{ duration: 0.8 }}
+          className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-10"
         >
           <div>
-            <h2 className="text-4xl md:text-6xl font-display font-bold text-portfolio-accent mb-4 uppercase tracking-wider">
-              Blog
+            <span className="font-display font-medium tracking-[0.1em] text-xs uppercase text-accent mb-6 block">
+              Knowledge & Insights
+            </span>
+            <h2 className="font-display font-bold text-5xl md:text-7xl tracking-[-0.03em] leading-[1.1] text-white">
+              Latest Articles
             </h2>
-            <p className="text-portfolio-text-sec text-lg max-w-2xl">
-              Insights, tutorials, and thoughts on technology and development
-            </p>
           </div>
 
-          <div className="relative max-w-sm w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-portfolio-muted" />
+          <div className="relative max-w-md w-full shrink-0 group">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 group-focus-within:text-accent transition-colors" />
             <input 
               type="text" 
               placeholder="Search articles..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-portfolio-card border border-portfolio-border rounded-full py-3 pl-12 pr-4 text-white focus:outline-none focus:border-portfolio-accent transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-full py-4 pl-14 pr-6 text-white font-body font-medium focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all backdrop-blur-md"
             />
           </div>
         </motion.div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid lg:grid-cols-2 gap-6"
-        >
-          {filteredPosts.map((post) => (
-            <motion.div key={post.id} variants={itemVariants}>
-              <div className="glass-card overflow-hidden h-full flex flex-col sm:flex-row group cursor-pointer">
-                {post.featured_image_url && (
-                  <div className="relative sm:w-2/5 h-48 sm:h-auto overflow-hidden shrink-0">
-                    <img
-                      src={post.featured_image_url}
-                      alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-portfolio-bg/20 group-hover:bg-transparent transition-colors" />
-                  </div>
-                )}
-                <div className="p-6 flex-1 flex flex-col">
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-portfolio-secondary flex items-center justify-center border border-portfolio-border-accent">
-                        <User className="w-4 h-4 text-portfolio-accent" />
-                      </div>
-                      <span className="text-sm font-medium text-white">Author</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-xs text-portfolio-text-sec font-medium">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {new Date(post.published_at || post.created_at).toLocaleDateString(
-                          "en-US",
-                          { month: "short", day: "numeric", year: "numeric" }
-                        )}
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+          
+          {/* Featured Post (Spans 2 columns on desktop) */}
+          {featuredPost && (
+            <motion.a
+              href={`/blog/${featuredPost.slug || featuredPost.id}`}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="group relative lg:col-span-2 h-[500px] md:h-[600px] rounded-[2.5rem] overflow-hidden border border-white/10 block bg-[#111]"
+            >
+              {/* Image */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110 ease-[0.16,1,0.3,1]"
+                style={{ backgroundImage: `url(${featuredPost.featured_image_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070'})` }}
+              />
+              
+              {/* Cinematic Gradient Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/60 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d]/80 via-transparent to-transparent opacity-60" />
+              
+              {/* Content */}
+              <div className="absolute bottom-0 left-0 w-full p-8 md:p-14 flex flex-col justify-end h-full">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="px-4 py-1.5 rounded-full bg-accent text-black font-display font-medium tracking-[0.1em] uppercase text-[10px] shadow-[0_0_20px_rgba(255,107,53,0.3)]">
+                    Featured
+                  </span>
+                  <span className="flex items-center gap-2 text-white/70 text-xs font-display font-medium tracking-[0.1em] uppercase backdrop-blur-md px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  </span>
+                </div>
+                
+                <h3 className="text-3xl md:text-5xl lg:text-6xl font-display font-semibold tracking-[-0.02em] text-white mb-6 leading-[1.2] group-hover:text-accent transition-colors duration-500 max-w-3xl drop-shadow-2xl">
+                  {featuredPost.title}
+                </h3>
+                
+                <p className="font-body font-normal md:font-medium leading-[1.7] text-white/70 text-base md:text-lg mb-10 max-w-2xl line-clamp-2">
+                  {featuredPost.excerpt || featuredPost.content.substring(0, 150) + "..."}
+                </p>
+                
+                <div className="flex items-center justify-between border-t border-white/10 pt-8 mt-auto">
+                  <div className="flex gap-2 flex-wrap">
+                    {featuredPost.tags && featuredPost.tags.slice(0, 3).map((tag: string, idx: number) => (
+                      <span key={idx} className="px-4 py-1.5 font-display font-medium tracking-[0.1em] text-[10px] uppercase rounded-full border border-white/20 text-white bg-white/5 backdrop-blur-md group-hover:border-white/40 transition-colors">
+                        {tag}
                       </span>
-                    </div>
+                    ))}
                   </div>
-
-                  <h3 className="text-xl font-display font-bold text-white mb-3 group-hover:text-portfolio-accent transition-colors line-clamp-2">
-                    {post.title}
-                  </h3>
-
-                  <p className="text-portfolio-text-sec text-sm leading-relaxed mb-6 line-clamp-3 flex-1">
-                    {post.excerpt || post.content.substring(0, 150) + "..."}
-                  </p>
-
-                  <div className="flex items-center justify-between mt-auto">
-                    <div className="flex gap-2 flex-wrap">
-                      {post.tags && post.tags.slice(0, 2).map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full border border-portfolio-border text-portfolio-muted group-hover:border-portfolio-border-accent group-hover:text-portfolio-accent transition-colors"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-portfolio-muted group-hover:text-portfolio-accent transition-colors transform group-hover:translate-x-1" />
+                  <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-accent group-hover:border-accent transition-all duration-500 backdrop-blur-md bg-white/5">
+                    <ArrowRight className="w-5 h-5 text-white group-hover:text-black group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
               </div>
-            </motion.div>
-          ))}
-          {filteredPosts.length === 0 && (
-            <div className="col-span-full text-portfolio-muted py-12">
-              No posts found matching your search.
-            </div>
+            </motion.a>
           )}
-        </motion.div>
 
-        {posts.length > 6 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mt-16"
-          >
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="bg-portfolio-card border border-portfolio-border text-white px-8 py-3.5 rounded-full font-bold text-sm inline-flex items-center hover:border-portfolio-border-accent hover:text-portfolio-accent transition-all"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          {/* Regular Posts Grid (Spans 1 column each) */}
+          {regularPosts.map((post, index) => (
+            <motion.a
+              href={`/blog/${post.slug || post.id}`}
+              key={post.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: index * 0.1, duration: 0.8 }}
+              className="group relative h-[500px] md:h-[600px] rounded-[2.5rem] overflow-hidden border border-white/10 block bg-[#111]"
             >
-              View All Posts
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </motion.button>
-          </motion.div>
+              {/* Image */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110 ease-[0.16,1,0.3,1]"
+                style={{ backgroundImage: `url(${post.featured_image_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070'})` }}
+              />
+              
+              {/* Cinematic Gradient Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/80 to-black/20 opacity-90 group-hover:opacity-80 transition-opacity duration-700" />
+              
+              {/* Content */}
+              <div className="absolute bottom-0 left-0 w-full p-8 md:p-10 flex flex-col justify-end h-full">
+                <div className="flex items-center gap-2 text-white/50 text-[10px] font-display font-medium tracking-[0.1em] uppercase mb-6 backdrop-blur-md px-3 py-1.5 rounded-full bg-white/5 border border-white/10 w-fit">
+                  <Calendar className="w-3 h-3" />
+                  {new Date(post.published_at || post.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                </div>
+                
+                <h3 className="text-2xl md:text-3xl font-display font-semibold tracking-[-0.02em] text-white mb-4 leading-[1.2] group-hover:text-accent transition-colors duration-500 line-clamp-3">
+                  {post.title}
+                </h3>
+                
+                <p className="font-body font-normal text-white/70 leading-[1.7] text-sm mb-8 line-clamp-3">
+                  {post.excerpt || post.content.substring(0, 100) + "..."}
+                </p>
+                
+                <div className="flex items-center justify-between border-t border-white/10 pt-6 mt-auto">
+                  <div className="flex gap-2 flex-wrap">
+                    {post.tags && post.tags.slice(0, 2).map((tag: string, idx: number) => (
+                      <span key={idx} className="px-3 py-1 font-display font-medium tracking-[0.1em] text-[10px] uppercase rounded-full border border-white/10 text-white/70 bg-white/5 backdrop-blur-md group-hover:border-white/30 transition-colors">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-accent group-hover:border-accent transition-all duration-500 bg-white/5">
+                    <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-black group-hover:translate-x-1 transition-all" />
+                  </div>
+                </div>
+              </div>
+            </motion.a>
+          ))}
+        </div>
+
+        {filteredPosts.length === 0 && (
+          <div className="text-center py-32 border border-white/10 rounded-[2.5rem] bg-white/5 backdrop-blur-md mt-10">
+            <p className="font-display font-semibold tracking-[0.1em] uppercase text-xl text-white/40">No articles found</p>
+            <p className="font-body font-normal text-white/50 mt-4">Try adjusting your search terms</p>
+          </div>
         )}
       </div>
     </section>

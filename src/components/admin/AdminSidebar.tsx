@@ -62,16 +62,17 @@ export const AdminSidebar = () => {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-r border-white/10 bg-black/40 backdrop-blur-xl">
       <SidebarContent>
-        <div className="p-4 border-b border-primary/20">
-          <h2 className={`font-bold gradient-text ${state === "collapsed" ? "text-center text-sm" : "text-xl"}`}>
-            {state === "collapsed" ? "AP" : "Admin Panel"}
+        <div className="p-6 border-b border-white/10">
+          <h2 className={`font-display font-black tracking-widest uppercase flex items-center justify-center ${state === "collapsed" ? "text-sm" : "text-xl"}`}>
+            <span className="text-white">{state === "collapsed" ? "Q" : "Quantum"}</span>
+            <span className="text-accent">.</span>
           </h2>
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-portfolio-muted font-bold text-xs uppercase tracking-wider mt-4 mb-2">Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -80,8 +81,8 @@ export const AdminSidebar = () => {
                     <NavLink
                       to={item.url}
                       end={item.end}
-                      className="hover:bg-primary/10 rounded-xl transition-all"
-                      activeClassName="bg-primary/20 text-primary font-medium glow-cyan"
+                      className="hover:bg-white/5 hover:text-white text-portfolio-text-sec rounded-xl transition-all duration-300"
+                      activeClassName="bg-accent/10 text-accent font-medium border-l-2 border-accent rounded-l-none"
                     >
                       <item.icon className="w-5 h-5" />
                       <span>{item.title}</span>
@@ -93,10 +94,10 @@ export const AdminSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <div className="p-4 border-t border-primary/20 mt-auto flex flex-col gap-2">
+      <div className="p-4 border-t border-white/10 mt-auto flex flex-col gap-3">
         <SidebarMenuButton 
           onClick={() => navigate("/")}
-          className="w-full text-portfolio-muted hover:text-white hover:bg-primary/10 rounded-xl transition-all font-medium flex items-center gap-2"
+          className="w-full text-portfolio-muted hover:text-white hover:bg-white/10 rounded-xl transition-all font-medium flex items-center gap-3 py-6"
         >
           <Globe className="w-5 h-5" />
           {state !== "collapsed" && <span>View Portfolio</span>}
@@ -104,7 +105,7 @@ export const AdminSidebar = () => {
 
         <SidebarMenuButton 
           onClick={handleLogout}
-          className="w-full text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-medium flex items-center gap-2"
+          className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all font-medium flex items-center gap-3 py-6"
         >
           <LogOut className="w-5 h-5" />
           {state !== "collapsed" && <span>Logout</span>}
