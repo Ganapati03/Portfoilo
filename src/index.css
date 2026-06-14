@@ -167,3 +167,111 @@
 .fan-card:has(+ .fan-card + .fan-card + .fan-card:hover) {
   --arc-shift: calc(var(--arc-shift-delta) * -1);   
 }
+
+/* Experience Deck Layout */
+:root {
+	--bg: 25% 0.0075 70;
+	--pink: 77.75% 0.1003 350.51;
+	--gold: 84.16% 0.1169 71.19;
+	--mint: 84.12% 0.1334 165.28;
+	--outline-w: 6px;
+	--preview-bg: #fff;
+}
+
+.exp-card__container {
+	display: flex;
+	flex-wrap: wrap;
+	place-items: center;
+	place-content: center;
+	height: 100%;
+    gap: 3rem; /* Good gap between cards */
+}
+
+.exp-card__container:has(.exp-card:hover, .exp-card:focus-within) .exp-card:not(:hover):not(:focus-within) {
+	opacity: 0.3;
+}
+
+.exp-card {
+	--shadow-blur: 24px;
+	--shadow-color: oklch(var(--bg));
+	--border-color: transparent;
+
+	background-clip: padding-box;
+	background-color: #111;
+
+	border: var(--outline-w) solid var(--border-color);
+	border-radius: 16px;
+	box-shadow: 0 0 var(--shadow-blur) 0 var(--shadow-color);
+
+	transition-property: border, box-shadow, filter, outline-offset, opacity, rotate, scale, z-index, background-color;
+	transition-duration: 0.15s, 0.15s, 0.6s, 0.6s, 0.3s, 0.3s, 0.3s, 0.15s, 0.3s;
+
+	filter: grayscale(100%) sepia(5%);
+	opacity: 0.75;
+
+	scale: 0.85;
+	rotate: var(--rotation, -4deg);
+
+	outline: var(--outline-w) solid var(--preview-bg);
+	outline-offset: var(--outline-w);
+
+	min-height: 480px;
+	min-width: 320px;
+    max-width: 340px;
+
+	position: relative;
+    cursor: pointer;
+    margin: 10px; /* Standard margin */
+}
+
+.exp-card:focus-within,
+.exp-card:hover {
+	--shadow-blur: 150px;
+	--shadow-color: oklch(var(--gold));
+	--border-color: var(--shadow-color);
+
+	background-color: #1a1a1a;
+	filter: none;		
+	opacity: 1;	
+	
+	outline-offset: calc(var(--outline-w) / 2);
+	
+	scale: 1;
+	rotate: 0deg;
+	
+	transition-duration: 0.15s, 0.15s, 0.3s, 0.3s, 0.3s, 0.3s, 0.3s, 0.15s, 0.3s;
+}
+
+.exp-card:focus-within {
+	--shadow-color: oklch(var(--pink));
+	z-index: 5;
+}
+
+.exp-card:hover {
+	z-index: 6;
+}
+.exp-card:hover:focus { 
+    --shadow-color: oklch(var(--mint)); 
+}
+
+@media (max-width: 768px) {
+    .exp-card__container {
+        gap: 2rem;
+        flex-direction: column;
+        padding: 0 1rem;
+    }
+    .exp-card {
+        min-height: auto;
+        min-width: unset;
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        scale: 1;
+        rotate: 0deg !important; /* Disable scattered rotation on narrow screens */
+    }
+    .exp-card:focus-within,
+    .exp-card:hover,
+    .exp-card:hover:focus {
+        --shadow-color: rgba(255, 107, 53, 0.8) !important;
+    }
+}
