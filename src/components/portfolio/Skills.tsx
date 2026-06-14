@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { useSkills } from "@/integrations/supabase/hooks";
@@ -10,6 +10,14 @@ export const Skills = () => {
   const { data, isLoading } = useSkills();
   const skillsData = data as Skill[] | null;
   const containerRef = useRef<HTMLElement>(null);
+
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -86,13 +94,23 @@ export const Skills = () => {
         </motion.div>
         
         {Object.keys(skillsByCategory).length > 0 ? (
-          <div className="w-full flex justify-center py-4 overflow-hidden">
+          <div className="w-full flex justify-center py-4 relative z-20">
             {(() => {
+              const isMobile = windowWidth < 640;
+              const isTablet = windowWidth >= 640 && windowWidth < 1024;
+
               const categories = Object.entries(skillsByCategory);
               const cardsCount = categories.length;
-              const arcSize = Math.min(0.25, Math.max(0.1, cardsCount * 0.04));
+              
+              // Tighter arc on mobile to fit the screen
+              const maxArc = isMobile ? 0.16 : (isTablet ? 0.2 : 0.25);
+              const arcSize = Math.min(maxArc, Math.max(0.1, cardsCount * 0.04));
               const arcStep = cardsCount > 1 ? arcSize / (cardsCount - 1) : 0;
               const arcStart = 0.75 - arcSize / 2;
+
+              // Smaller cards and a much tighter hand-fan radius on mobile
+              const cardWidth = isMobile ? '200px' : (isTablet ? '240px' : '280px');
+              const radius = isMobile ? '240px' : (isTablet ? '500px' : '800px');
 
               return (
                 <div 
@@ -100,9 +118,9 @@ export const Skills = () => {
                   style={{
                     '--card-trans-duration': '500ms',
                     '--card-trans-easing': 'cubic-bezier(0.19, 1, 0.22, 1)',
-                    '--card-border-radius': '24px',
-                    '--card-width': '280px',
-                    '--radius': '800px',
+                    '--card-border-radius': isMobile ? '16px' : '24px',
+                    '--card-width': cardWidth,
+                    '--radius': radius,
                     '--arc-start': arcStart,
                     '--arc-step': arcStep,
                     '--arc-shift-delta': 0.015,
@@ -111,7 +129,7 @@ export const Skills = () => {
                   {categories.map(([category, skills], index) => (
                     <div 
                       key={category}
-                      className="fan-card p-6 flex flex-col group overflow-hidden"
+                      className="fan-card p-4 sm:p-6 flex flex-col group overflow-hidden"
                       style={{ '--card-i': index + 1 } as React.CSSProperties}
                     >
                       {/* Decorative top accent */}
