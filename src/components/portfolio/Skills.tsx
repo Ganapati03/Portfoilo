@@ -75,7 +75,7 @@ export const Skills = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-24"
+          className="text-center mb-12"
         >
           <span className="font-display font-medium tracking-[0.1em] text-xs uppercase text-accent mb-4 block">
             Capabilities
@@ -85,49 +85,76 @@ export const Skills = () => {
           </h2>
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          {Object.entries(skillsByCategory).map(([category, skills], index) => (
-            <motion.div 
-              key={category}
-              style={{ y: index % 2 === 0 ? y1 : y2 }}
-              className="glass-card p-8 group hover:-translate-y-4 transition-transform duration-500"
-            >
-              <h3 className="text-xl font-display font-semibold tracking-[-0.02em] leading-[1.2] text-white mb-8 flex items-center gap-4">
-                <div className="w-8 h-px bg-accent flex-shrink-0" />
-                {category}
-              </h3>
-              
-              <div className="space-y-6">
-                {skills.map((skill) => (
-                  <div key={skill.id} className="relative">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-body font-medium text-white">{skill.name}</span>
-                      <span className="font-display font-bold tracking-[-0.04em] text-portfolio-muted text-sm">{skill.proficiency}%</span>
-                    </div>
-                    {/* Skill progress bar visualization */}
-                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${skill.proficiency}%` }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
-                        className="h-full bg-gradient-to-r from-accent/50 to-accent relative"
-                      >
-                        <div className="absolute top-0 right-0 w-2 h-full bg-white opacity-50 shadow-[0_0_10px_#fff]" />
-                      </motion.div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+        {Object.keys(skillsByCategory).length > 0 ? (
+          <div className="w-full flex justify-center py-4 overflow-hidden">
+            {(() => {
+              const categories = Object.entries(skillsByCategory);
+              const cardsCount = categories.length;
+              const arcSize = Math.min(0.25, Math.max(0.1, cardsCount * 0.04));
+              const arcStep = cardsCount > 1 ? arcSize / (cardsCount - 1) : 0;
+              const arcStart = 0.75 - arcSize / 2;
 
-          {Object.keys(skillsByCategory).length === 0 && (
-            <div className="text-portfolio-muted text-lg col-span-full text-center">
-              No skills added yet.
-            </div>
-          )}
-        </div>
+              return (
+                <div 
+                  className="fan-wrapper"
+                  style={{
+                    '--card-trans-duration': '500ms',
+                    '--card-trans-easing': 'cubic-bezier(0.19, 1, 0.22, 1)',
+                    '--card-border-radius': '24px',
+                    '--card-width': '280px',
+                    '--radius': '800px',
+                    '--arc-start': arcStart,
+                    '--arc-step': arcStep,
+                    '--arc-shift-delta': 0.015,
+                  } as React.CSSProperties}
+                >
+                  {categories.map(([category, skills], index) => (
+                    <div 
+                      key={category}
+                      className="fan-card p-6 flex flex-col group overflow-hidden"
+                      style={{ '--card-i': index + 1 } as React.CSSProperties}
+                    >
+                      {/* Decorative top accent */}
+                      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent/50 to-accent" />
+                      
+                      {/* Diagonal Flash Effect */}
+                      <div 
+                        className="flash-effect opacity-50" 
+                        style={{ animationDelay: `${index * 0.2}s` }} 
+                      />
+
+                      <h3 className="text-xl sm:text-2xl font-display font-semibold text-white mb-6 mt-4 flex items-center gap-3 relative z-10">
+                        <div className="w-2 h-2 rounded-full bg-accent" />
+                        {category}
+                      </h3>
+                      
+                      <div className="space-y-5 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
+                        {skills.map((skill) => (
+                          <div key={skill.id} className="relative">
+                            <div className="flex justify-between items-center mb-1.5">
+                              <span className="font-body font-medium text-white/80 text-sm">{skill.name}</span>
+                              <span className="font-display font-bold text-accent text-xs">{skill.proficiency}%</span>
+                            </div>
+                            <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-accent rounded-full"
+                                style={{ width: `${skill.proficiency}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        ) : (
+          <div className="text-portfolio-muted text-lg text-center">
+            No skills added yet.
+          </div>
+        )}
       </div>
     </section>
   );

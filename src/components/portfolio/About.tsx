@@ -79,13 +79,19 @@ export const About = () => {
               {/* Glow Behind */}
               <div className="absolute inset-[-20px] bg-accent/20 blur-2xl rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               
-              <motion.img
+              <motion.div
                 animate={{ y: [0, -15, 0] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                src={profile?.avatar_url || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop"}
-                alt="Profile Portrait"
-                className="w-full h-full object-cover rounded-[2rem] shadow-2xl grayscale-[50%] group-hover:grayscale-0 transition-all duration-700 border border-white/10 relative z-10"
-              />
+                className="relative w-full h-full rounded-[2rem] overflow-hidden shadow-2xl border border-white/10 z-10"
+              >
+                <img
+                  src={profile?.avatar_url || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop"}
+                  alt="Profile Portrait"
+                  className="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700"
+                />
+                {/* Diagonal Flash Effect */}
+                <div className="flash-effect" />
+              </motion.div>
 
               {/* Decorative Frame */}
               <div className="absolute inset-0 rounded-[2rem] border border-accent translate-x-3 translate-y-3 -z-10 group-hover:translate-x-6 group-hover:translate-y-6 transition-transform duration-700" />

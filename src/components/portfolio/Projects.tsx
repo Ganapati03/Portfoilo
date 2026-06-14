@@ -3,100 +3,117 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { ExternalLink, Github, Loader2 } from "lucide-react";
 import { useProjects } from "@/integrations/supabase/hooks";
 
-const ProjectCard = ({ project, index }: { project: any, index: number }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: cardRef,
-    offset: ["start end", "end start"]
-  });
+const cardThemes = [
+  {
+    buttonBg: "bg-[#C55741]",
+    buttonHover: "hover:bg-[#a64733]",
+    priceBg: "bg-[#C55741]",
+    tagBg: "bg-[#FDDED2]",
+    tagText: "text-[#C55741]",
+  },
+  {
+    buttonBg: "bg-[#518291]",
+    buttonHover: "hover:bg-[#3f6774]",
+    priceBg: "bg-[#518291]",
+    tagBg: "bg-[#A7E8F6]",
+    tagText: "text-[#518291]",
+  },
+  {
+    buttonBg: "bg-[#FF8A68]",
+    buttonHover: "hover:bg-[#e06b49]",
+    priceBg: "bg-[#FF8A68]",
+    tagBg: "bg-[#FFD6CA]",
+    tagText: "text-[#FF8A68]",
+  }
+];
 
-  // Parallax for the image inside the card
-  const y = useTransform(scrollYProgress, [0, 1], [-50, 50]);
+const ProjectCard = ({ project, index }: { project: any, index: number }) => {
+  const theme = cardThemes[index % cardThemes.length];
 
   return (
     <motion.div
-      ref={cardRef}
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.8, delay: index * 0.1 }}
-      className="group relative w-full h-[60vh] md:h-[80vh] rounded-[2rem] overflow-hidden bg-secondary border border-white/10"
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+      className="bg-gradient-to-br from-[#FFF3EB] to-[#FFE6D6] rounded-[2rem] p-4 sm:p-5 flex flex-col group shadow-[0_10px_40px_-15px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.4)] transition-all duration-500 border border-[#FFD6C2]/30"
     >
-      {/* Background Image with Parallax and Zoom */}
-      <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
-        <motion.div style={{ y }} className="w-full h-[120%] -top-[10%] relative">
-          <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-700 z-10" />
-          {project.image_url ? (
+      {/* Image container */}
+      <div className="relative w-full aspect-[4/3] rounded-[1.5rem] overflow-hidden bg-gray-100 mb-6 shrink-0">
+        {project.image_url ? (
+          <div className="absolute inset-0 w-full h-full">
+            {/* Base Image: Grayscale & darkened */}
             <img
               src={project.image_url}
               alt={project.title}
-              className="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-1000 ease-[0.16,1,0.3,1]"
+              className="absolute inset-0 w-full h-full object-cover brightness-[0.8] grayscale"
             />
-          ) : (
-            <div className="w-full h-full bg-secondary flex items-center justify-center">
-              <span className="font-display font-medium tracking-[0.1em] uppercase text-portfolio-muted text-xs">No Image</span>
-            </div>
-          )}
-        </motion.div>
+            {/* Hover Image: Colored wipe animation */}
+            <img
+              src={project.image_url}
+              alt={project.title}
+              className="absolute inset-0 w-full h-full object-cover transition-all duration-[350ms] ease-[cubic-bezier(0.19,1,0.22,1)] [clip-path:inset(100%_0_0_0)] group-hover:[clip-path:inset(0_0_0_0)]"
+            />
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-gray-400 text-sm font-medium uppercase tracking-wider">No Image</span>
+          </div>
+        )}
+
+        {/* Category Tab */}
+        <div className="absolute top-0 left-0 bg-[#FFF3EB] rounded-br-[1.5rem] px-5 py-2.5 z-10 flex items-center justify-center">
+          <span className="text-gray-600 font-medium text-[13px] tracking-wide">
+            {project.tags?.[0] || 'Project'}
+          </span>
+          
+          {/* SVG Inverted corners */}
+          <svg className="absolute top-0 -right-[20px] w-[20px] h-[20px] fill-[#FFF3EB]" viewBox="0 0 20 20">
+            <path d="M0,0 H20 A20,20 0 0,0 0,20 V0 Z" />
+          </svg>
+          <svg className="absolute -bottom-[20px] left-0 w-[20px] h-[20px] fill-[#FFF3EB]" viewBox="0 0 20 20">
+            <path d="M0,0 H20 A20,20 0 0,0 0,20 V0 Z" />
+          </svg>
+        </div>
       </div>
 
-      {/* Glass Info Panel */}
-      <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-20">
-        <div className="glass-card p-8 rounded-3xl backdrop-blur-xl border border-white/10 bg-black/40 group-hover:bg-black/60 transition-colors duration-500 translate-y-4 group-hover:translate-y-0 opacity-90 group-hover:opacity-100">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="flex-1">
-              <h3 className="text-3xl md:text-5xl font-display font-semibold tracking-[-0.02em] leading-[1.2] text-white mb-4">
-                {project.title}
-              </h3>
-              <p className="font-body font-normal md:font-medium text-white/70 leading-[1.7] text-lg md:text-xl mb-6 max-w-2xl line-clamp-2 group-hover:line-clamp-none transition-all duration-500">
-                {project.description}
-              </p>
-              
-              {/* Animated Tags */}
-              <div className="flex flex-wrap gap-3">
-                {project.tags?.map((tech: string, i: number) => (
-                  <motion.span
-                    key={tech}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * i }}
-                    className="px-4 py-2 font-display font-medium tracking-[0.1em] text-xs uppercase rounded-full border border-white/20 text-white bg-white/5 backdrop-blur-md"
-                  >
-                    {tech}
-                  </motion.span>
-                ))}
-              </div>
-            </div>
-
-            {/* Links */}
-            <div className="flex items-center gap-4 shrink-0">
-              {project.github_url && (
-                <motion.a 
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  href={project.github_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors"
-                >
-                  <Github className="w-6 h-6" />
-                </motion.a>
-              )}
-              {project.demo_url && (
-                <motion.a 
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  href={project.demo_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-14 h-14 rounded-full bg-accent border border-accent flex items-center justify-center text-black hover:bg-white hover:border-white transition-colors"
-                >
-                  <ExternalLink className="w-6 h-6" />
-                </motion.a>
-              )}
-            </div>
+      {/* Content */}
+      <div className="flex-1 flex flex-col px-2">
+        <div className="flex justify-between items-center mb-3 gap-4">
+          <h3 className="text-xl sm:text-[22px] font-bold text-gray-900 line-clamp-1 tracking-tight">
+            {project.title}
+          </h3>
+          <div className={`px-4 py-1 ${theme.priceBg} text-white text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap shrink-0`}>
+            {project.demo_url ? 'Live' : 'Code'}
           </div>
         </div>
+
+        <p className="text-gray-500 text-sm sm:text-[15px] leading-relaxed line-clamp-3 mb-6 flex-1 font-body">
+          {project.description}
+        </p>
+
+        {/* Tags */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {project.tags?.slice(1, 4).map((tech: string) => (
+            <span
+              key={tech}
+              className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wide ${theme.tagBg} ${theme.tagText}`}
+            >
+              {tech}
+            </span>
+          ))}
+        </div>
+
+        {/* Action Button */}
+        <a
+          href={project.demo_url || project.github_url || '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`w-full py-3 sm:py-4 rounded-[1.25rem] ${theme.buttonBg} ${theme.buttonHover} transition-colors duration-300 text-white font-bold text-sm sm:text-[15px] flex items-center justify-center gap-2`}
+        >
+          {project.demo_url ? <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" /> : <Github className="w-4 h-4 sm:w-5 sm:h-5" />}
+          View Details
+        </a>
       </div>
     </motion.div>
   );
@@ -124,22 +141,22 @@ export const Projects = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-20 text-center"
+          className="mb-16 md:mb-20 text-center"
         >
-          <span className="font-display font-medium tracking-[0.1em] text-xs uppercase text-accent mb-4 block">
+          <span className="font-display font-medium tracking-[0.1em] text-[10px] sm:text-xs uppercase text-accent mb-4 block">
             Selected Works
           </span>
-          <h2 className="font-display font-bold text-5xl md:text-7xl tracking-[-0.03em] leading-[1.1] text-white">
+          <h2 className="font-display font-bold text-4xl sm:text-5xl lg:text-7xl tracking-[-0.03em] leading-[1.1] text-white">
             Featured Projects
           </h2>
         </motion.div>
 
-        <div className="flex flex-col gap-12 md:gap-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {projects?.map((project, index) => (
             <ProjectCard key={project.id} project={project} index={index} />
           ))}
           {projects?.length === 0 && (
-            <div className="font-body font-normal md:font-medium text-portfolio-muted leading-[1.7] text-lg py-12 text-center">
+            <div className="font-body font-normal md:font-medium text-portfolio-muted leading-[1.7] text-lg py-12 text-center col-span-full">
               No projects to display yet.
             </div>
           )}

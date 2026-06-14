@@ -41,6 +41,24 @@ export const Certifications = () => {
               .animate-marquee-ltr {
                 animation: marqueeLeftToRight 10s linear infinite;
               }
+              @keyframes diagonalFlash {
+                0% { left: -150%; opacity: 0; }
+                10% { opacity: 1; }
+                30% { left: 150%; opacity: 0; }
+                100% { left: 150%; opacity: 0; }
+              }
+              .flash-effect {
+                position: absolute;
+                top: 0;
+                left: -150%;
+                width: 120%;
+                height: 100%;
+                background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0.3) 80%, transparent);
+                transform: skewX(-25deg);
+                z-index: 5;
+                pointer-events: none;
+                animation: diagonalFlash 4s infinite;
+              }
             `}
           </style>
           {/* Gradient Edges for smooth entry/exit */}
@@ -55,7 +73,7 @@ export const Certifications = () => {
                 {certifications?.map((cert, index) => (
                   <div
                     key={`${cert.id}-${blockIdx}-${index}`}
-                    className="group relative h-[220px] w-[320px] sm:h-[260px] sm:w-[380px] md:h-[300px] md:w-[450px] shrink-0 rounded-[2rem] overflow-hidden border border-white/10 bg-secondary/20 cursor-pointer"
+                    className="group relative h-[220px] w-[320px] sm:h-[260px] sm:w-[380px] md:h-[300px] md:w-[450px] shrink-0 rounded-[2rem] overflow-hidden border border-white/10 bg-secondary/20 cursor-pointer shadow-[0_5px_20px_rgba(0,0,0,0.3)]"
                   >
                     {/* Background Image filling the card */}
                     {cert.image_url ? (
@@ -70,12 +88,18 @@ export const Certifications = () => {
                         <span className="text-portfolio-muted font-medium text-sm px-4 text-center">No Image Provided</span>
                       </div>
                     )}
+
+                    {/* Diagonal Flash Effect */}
+                    <div 
+                      className="flash-effect" 
+                      style={{ animationDelay: `${(index + (blockIdx * (certifications?.length || 1))) * 0.15}s` }} 
+                    />
                     
                     {/* Hover Overlay Background */}
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
                     
                     {/* Hover Content */}
-                    <div className="absolute inset-0 p-6 flex flex-col items-center justify-center text-center translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                    <div className="absolute inset-0 p-6 flex flex-col items-center justify-center text-center translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 z-20">
                         <div className="flex-1 flex flex-col items-center justify-center">
                           <h3 className="font-display font-bold text-2xl text-white mb-2 leading-tight">
                             {cert.name}
@@ -90,7 +114,7 @@ export const Certifications = () => {
                               href={cert.credential_url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-2 text-sm font-bold text-black bg-accent hover:bg-white px-6 py-3 rounded-full transition-all duration-300 w-full"
+                              className="inline-flex items-center justify-center gap-2 text-sm font-bold text-black bg-accent hover:bg-white px-6 py-3 rounded-full transition-all duration-300 w-full shadow-[0_0_20px_rgba(255,107,53,0.3)]"
                             >
                               View Credential
                               <ExternalLink className="w-4 h-4" />

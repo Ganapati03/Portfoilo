@@ -88,8 +88,10 @@ export const Hero = () => {
           </div>
         ) : (
           <>
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 overflow-hidden">
               <ScrollyCanvas scrollContainerRef={containerRef} frameCount={120} />
+              {/* Diagonal Flash Effect */}
+              <div className="flash-effect opacity-40 mix-blend-overlay" />
             </div>
 
             <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">

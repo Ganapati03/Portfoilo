@@ -106,3 +106,64 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
 }
+
+/* Fan Layout */
+.fan-wrapper {
+  position: relative;
+  width: var(--card-width);
+  aspect-ratio: 4 / 6;
+  margin: 0 auto;
+  margin-top: 20px;
+  margin-bottom: 50px;
+}
+
+.fan-card {
+  position: absolute;
+  width: var(--card-width);
+  aspect-ratio: 4 / 6;
+  background: rgba(20, 20, 20, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--card-border-radius);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+
+  --arc-shift: 0;
+  offset-path: circle(var(--radius) at 50% calc(var(--radius) + 20px));
+  offset-distance: calc(
+    (var(--arc-start)
+     + (var(--card-i) - 1) * var(--arc-step)
+     + var(--arc-shift)
+    ) * 100%
+  );
+  
+  offset-rotate: auto;
+  offset-anchor: 50% 0%;
+  transition: all var(--card-trans-duration) var(--card-trans-easing);
+  z-index: var(--card-i);
+}
+
+.fan-card:hover {
+  offset-anchor: 50% 10%;
+  z-index: 100 !important;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 107, 53, 0.6);
+  border-color: rgba(255, 107, 53, 0.8);
+}
+
+.fan-card:hover + .fan-card {
+  --arc-shift: calc(var(--arc-shift-delta) * 3);  
+}
+.fan-card:hover + .fan-card + .fan-card {
+  --arc-shift: calc(var(--arc-shift-delta) * 2);   
+}
+.fan-card:hover + .fan-card + .fan-card + .fan-card {
+  --arc-shift: calc(var(--arc-shift-delta) * 1);    
+}
+.fan-card:has(+ .fan-card:hover) {
+  --arc-shift: calc(var(--arc-shift-delta) * -3);    
+}
+.fan-card:has(+ .fan-card + .fan-card:hover) {
+  --arc-shift: calc(var(--arc-shift-delta) * -2);    
+}
+.fan-card:has(+ .fan-card + .fan-card + .fan-card:hover) {
+  --arc-shift: calc(var(--arc-shift-delta) * -1);   
+}

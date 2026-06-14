@@ -140,10 +140,14 @@ export const Experience = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
           className="mb-20 text-center md:text-left md:pl-[180px]"
         >
-          <h2 className="font-display font-black text-4xl md:text-5xl text-white">
-            Experience
+          <span className="font-display font-medium tracking-[0.1em] text-xs uppercase text-accent mb-4 block">
+            Career Path
+          </span>
+          <h2 className="font-display font-bold text-5xl md:text-7xl tracking-[-0.03em] leading-[1.1] text-white">
+            Professional Experience
           </h2>
         </motion.div>
 
