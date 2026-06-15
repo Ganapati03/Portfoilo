@@ -37,18 +37,9 @@ export const About = () => {
   const imgY = useTransform(scrollYProgress, [0, 1], [100, -100]);
   const textY = useTransform(scrollYProgress, [0, 1], [50, -50]);
 
-  const calculateYearsExperience = () => {
-    if (!experience || experience.length === 0) return 0;
-    const validDates = experience.filter(exp => exp.start_date).map(exp => new Date(exp.start_date!).getTime());
-    if (validDates.length === 0) return 0;
-    const earliestDate = Math.min(...validDates);
-    const diff = Date.now() - earliestDate;
-    return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
-  };
-
-  const yearsExperience = calculateYearsExperience();
-  const projectCount = projects?.length || 0;
-  const skillCount = skills?.length || 0;
+  const yearsExperience = profile?.years_experience ?? 2;
+  const projectCount = profile?.projects_delivered ?? 4;
+  const skillCount = profile?.technologies_mastered ?? 19;
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });

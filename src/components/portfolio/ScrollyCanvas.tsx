@@ -64,8 +64,6 @@ const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
   }, [frameCount]);
 
   const drawFrame = (index: number) => {
-    // DO NOT draw until all images are completely loaded
-    if (loaded < frameCount) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -110,23 +108,16 @@ const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
 
   // Listen to frame index changes and draw the corresponding frame
   useMotionValueEvent(frameIndex, "change", (latest) => {
-    if (loaded === frameCount) {
-      const index = Math.floor(latest);
-      console.log("Current frame index during scroll:", index);
-      drawFrame(index);
-    }
+    const index = Math.floor(latest);
+    drawFrame(index);
   });
 
   // Initial draw when images fully load or window resizes
   useEffect(() => {
-    if (loaded === frameCount) {
-      drawFrame(Math.floor(frameIndex.get()));
-    }
+    drawFrame(Math.floor(frameIndex.get()));
     
     const handleResize = () => {
-      if (loaded === frameCount) {
-        drawFrame(Math.floor(frameIndex.get()));
-      }
+      drawFrame(Math.floor(frameIndex.get()));
     };
     
     window.addEventListener('resize', handleResize);
@@ -142,18 +133,18 @@ const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
         className="w-full h-full object-cover"
       />
       
-      {/* Loading overlay */}
+      {/* Loading overlay - Non-blocking */}
       {loaded < frameCount && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background z-50">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+        <div className="absolute bottom-8 right-8 z-50 pointer-events-none opacity-40">
+          <div className="flex flex-col items-end gap-2">
+            <div className="w-32 h-[2px] bg-white/10 overflow-hidden rounded-full">
               <div 
                 className="h-full bg-accent transition-all duration-300"
                 style={{ width: `${loadingPercentage}%` }}
               />
             </div>
-            <p className="text-xl font-display font-bold tracking-widest text-portfolio-muted uppercase">
-              LOADING {loadingPercentage}%
+            <p className="text-[10px] font-display font-medium tracking-widest text-portfolio-muted uppercase">
+              CANVAS {loadingPercentage}%
             </p>
           </div>
         </div>

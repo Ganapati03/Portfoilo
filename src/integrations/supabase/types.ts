@@ -23,6 +23,9 @@ export interface Database {
           twitter_url: string | null
           gemini_api_key: string | null
           registration_enabled: boolean | null
+          years_experience: number | null
+          projects_delivered: number | null
+          technologies_mastered: number | null
           created_at: string
           updated_at: string
         }
@@ -39,6 +42,9 @@ export interface Database {
           twitter_url?: string | null
           gemini_api_key?: string | null
           registration_enabled?: boolean | null
+          years_experience?: number | null
+          projects_delivered?: number | null
+          technologies_mastered?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -55,6 +61,9 @@ export interface Database {
           twitter_url?: string | null
           gemini_api_key?: string | null
           registration_enabled?: boolean | null
+          years_experience?: number | null
+          projects_delivered?: number | null
+          technologies_mastered?: number | null
           created_at?: string
           updated_at?: string
         }

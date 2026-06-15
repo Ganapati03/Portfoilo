@@ -4,6 +4,8 @@ import { MessageCircle, X, Send, Volume2, VolumeX, Globe, Sparkles } from "lucid
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Lottie from "lottie-react";
+import spookyCatAnimation from "../../../public/spooky-cat.json";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -182,11 +184,18 @@ export const ChatWidget = () => {
     <>
       <motion.button
         initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        whileHover={{ scale: 1.05 }}
+        animate={isOpen ? { scale: 1 } : { scale: [1, 1.3, 1] }}
+        transition={isOpen ? { duration: 0.2 } : { 
+          duration: 1.5, 
+          repeat: Infinity, 
+          repeatDelay: 4,
+          times: [0, 0.15, 1], // sudden pop, slow settle
+          ease: ["backOut", "easeInOut"] 
+        }}
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-accent/90 backdrop-blur-md flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,107,53,0.3)] border border-white/20 transition-all hover:shadow-[0_0_40px_rgba(255,107,53,0.5)] group"
+        className="fixed bottom-6 right-6 z-50 w-20 h-20 flex items-center justify-center group"
       >
         <AnimatePresence mode="wait">
           {isOpen ? (
@@ -194,9 +203,10 @@ export const ChatWidget = () => {
               <X className="w-7 h-7 text-black" />
             </motion.div>
           ) : (
-            <motion.div key="chat" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: -90 }} className="relative">
-              <Sparkles className="absolute -top-2 -right-2 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-white" />
-              <MessageCircle className="w-7 h-7 text-black" />
+            <motion.div key="chat" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: -90 }} className="relative w-12 h-12 flex items-center justify-center">
+              <div className="w-[150%] h-[150%] absolute flex items-center justify-center" style={{ filter: 'brightness(0) saturate(100%) invert(53%) sepia(80%) saturate(2891%) hue-rotate(346deg) brightness(99%) contrast(96%)' }}>
+                <Lottie animationData={spookyCatAnimation} loop={true} />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -215,8 +225,12 @@ export const ChatWidget = () => {
               {/* Header */}
               <div className="p-5 border-b border-white/10 bg-white/5 flex justify-between items-center backdrop-blur-md">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center border border-accent/30 relative">
-                    <Sparkles className="w-5 h-5 text-accent" />
+                  <div className="relative">
+                    <div className="w-12 h-12 flex items-center justify-center relative">
+                      <div className="w-[150%] h-[150%] absolute flex items-center justify-center" style={{ filter: 'brightness(0) saturate(100%) invert(53%) sepia(80%) saturate(2891%) hue-rotate(346deg) brightness(99%) contrast(96%)' }}>
+                        <Lottie animationData={spookyCatAnimation} loop={true} />
+                      </div>
+                    </div>
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black" />
                   </div>
                   <div>

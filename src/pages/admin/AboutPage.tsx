@@ -17,6 +17,9 @@ const AboutPage = () => {
   const [formData, setFormData] = useState({
     bio: "",
     avatar_url: "",
+    years_experience: 2,
+    projects_delivered: 4,
+    technologies_mastered: 19,
   });
   const [uploading, setUploading] = useState(false);
 
@@ -25,6 +28,9 @@ const AboutPage = () => {
       setFormData({
         bio: profile.bio || "",
         avatar_url: profile.avatar_url || "",
+        years_experience: profile.years_experience ?? 2,
+        projects_delivered: profile.projects_delivered ?? 4,
+        technologies_mastered: profile.technologies_mastered ?? 19,
       });
     }
   }, [profile]);
@@ -52,6 +58,9 @@ const AboutPage = () => {
       ...profile,
       bio: formData.bio,
       avatar_url: formData.avatar_url,
+      years_experience: formData.years_experience,
+      projects_delivered: formData.projects_delivered,
+      technologies_mastered: formData.technologies_mastered,
       updated_at: new Date().toISOString(),
     }, {
       onSuccess: () => {
@@ -101,6 +110,36 @@ const AboutPage = () => {
             <p className="text-xs text-foreground/50 mt-1">
               This text will be displayed in the About section. You can use newlines for paragraphs.
             </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label>Years Experience</Label>
+              <Input 
+                type="number"
+                value={formData.years_experience}
+                onChange={(e) => setFormData({ ...formData, years_experience: parseInt(e.target.value) || 0 })}
+                className="glass border-primary/30 rounded-xl mt-1"
+              />
+            </div>
+            <div>
+              <Label>Projects Delivered</Label>
+              <Input 
+                type="number"
+                value={formData.projects_delivered}
+                onChange={(e) => setFormData({ ...formData, projects_delivered: parseInt(e.target.value) || 0 })}
+                className="glass border-primary/30 rounded-xl mt-1"
+              />
+            </div>
+            <div>
+              <Label>Technologies Mastered</Label>
+              <Input 
+                type="number"
+                value={formData.technologies_mastered}
+                onChange={(e) => setFormData({ ...formData, technologies_mastered: parseInt(e.target.value) || 0 })}
+                className="glass border-primary/30 rounded-xl mt-1"
+              />
+            </div>
           </div>
 
           <div>
