@@ -30,10 +30,10 @@ const SkillsPage = () => {
   const deleteSkill = useDeleteSkill();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newSkill, setNewSkill] = useState({ name: "", category: "" });
+  const [newSkill, setNewSkill] = useState({ name: "", category: "", proficiency: 80 });
 
   const resetForm = () => {
-    setNewSkill({ name: "", category: "" });
+    setNewSkill({ name: "", category: "", proficiency: 80 });
     setEditingId(null);
     setIsDialogOpen(false);
   };
@@ -74,6 +74,7 @@ const SkillsPage = () => {
     setNewSkill({
       name: skill.name,
       category: skill.category,
+      proficiency: skill.proficiency || 80,
     });
     setEditingId(skill.id);
     setIsDialogOpen(true);
@@ -125,7 +126,7 @@ const SkillsPage = () => {
               className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:glow-cyan"
               onClick={() => {
                 setEditingId(null);
-                setNewSkill({ name: "", category: "" });
+                setNewSkill({ name: "", category: "", proficiency: 80 });
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -155,6 +156,18 @@ const SkillsPage = () => {
                   onChange={(e) => setNewSkill({ ...newSkill, category: e.target.value })}
                 />
               </div>
+              <div>
+                <Label>Proficiency (%)</Label>
+                <Input 
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="e.g., 90" 
+                  className="glass border-primary/30 rounded-xl mt-1" 
+                  value={newSkill.proficiency}
+                  onChange={(e) => setNewSkill({ ...newSkill, proficiency: parseInt(e.target.value) || 0 })}
+                />
+              </div>
               <Button 
                 className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary"
                 onClick={handleSaveSkill}
@@ -174,6 +187,7 @@ const SkillsPage = () => {
             <TableRow className="border-primary/20 hover:bg-transparent">
               <TableHead className="text-primary">Skill Name</TableHead>
               <TableHead className="text-primary">Category</TableHead>
+              <TableHead className="text-primary">Proficiency</TableHead>
               <TableHead className="text-primary text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -185,6 +199,17 @@ const SkillsPage = () => {
                   <span className="px-3 py-1 rounded-full glass border border-primary/30 text-xs">
                     {skill.category}
                   </span>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-primary/10 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary" 
+                        style={{ width: `${skill.proficiency || 0}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-foreground/70">{skill.proficiency || 0}%</span>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
@@ -210,7 +235,7 @@ const SkillsPage = () => {
             ))}
             {skills?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 text-foreground/50">
+                <TableCell colSpan={4} className="text-center py-8 text-foreground/50">
                   No skills found. Add some skills to get started.
                 </TableCell>
               </TableRow>

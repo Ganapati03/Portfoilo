@@ -36,20 +36,8 @@ export const ChatWidget = () => {
   const [isTyping, setIsTyping] = useState(false);
   
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
-  const [language, setLanguage] = useState("en");
-
-  const LANGUAGES = [
-    { code: "en", name: "English", native: "English" },
-    { code: "es", name: "Spanish", native: "Español" },
-    { code: "fr", name: "French", native: "Français" },
-    { code: "de", name: "German", native: "Deutsch" },
-    { code: "hi", name: "Hindi", native: "हिन्दी" },
-    { code: "ta", name: "Tamil", native: "தமிழ்" },
-    { code: "zh", name: "Chinese", native: "中文" },
-    { code: "ja", name: "Japanese", native: "日本語" },
-    { code: "kn", name: "Kannada", native: "ಕನ್ನಡ" },
-  ];
   
+
   const { data: knowledgeBase } = useAIKnowledge();
   const { data: profile } = useProfile();
   const { data: projects } = useProjects();
@@ -79,28 +67,17 @@ export const ChatWidget = () => {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     
-    let selectedVoice = null;
-
-    if (language === 'en') {
-      selectedVoice = voices.find(v => 
-        (v.name.includes("UK") || v.name.includes("Great Britain") || v.lang.includes("en-GB")) && 
-        !v.name.includes("Female")
-      ) || voices.find(v => v.lang.includes("en-GB")) || voices.find(v => v.lang.includes("en-US"));
-    } else {
-      selectedVoice = voices.find(v => v.lang.startsWith(language));
-    }
+    let selectedVoice = voices.find(v => 
+      (v.name.includes("UK") || v.name.includes("Great Britain") || v.lang.includes("en-GB")) && 
+      !v.name.includes("Female")
+    ) || voices.find(v => v.lang.includes("en-GB")) || voices.find(v => v.lang.includes("en-US"));
 
     if (selectedVoice) {
       utterance.voice = selectedVoice;
     }
 
-    if (language === 'en') {
-      utterance.pitch = 0.9;
-      utterance.rate = 1.05;
-    } else {
-      utterance.pitch = 1;
-      utterance.rate = 1;
-    }
+    utterance.pitch = 0.9;
+    utterance.rate = 1.05;
     
     window.speechSynthesis.speak(utterance);
   };
@@ -113,71 +90,54 @@ export const ChatWidget = () => {
     setInputValue("");
     setIsTyping(true);
 
-    try {
-      if (!profile?.gemini_api_key) {
-        throw new Error("Gemini API key not configured");
+    setTimeout(() => {
+      let botResponse = "I'm not exactly sure about that. I know about skills, projects, experience, and education. Try asking me about one of those!";
+      const query = userMessage.toLowerCase();
+
+      // 1. Greetings
+      if (query.match(/^(hi|hello|hey|greetings|sup)/)) {
+        botResponse = `Hello! I'm the local AI assistant for ${profile?.full_name || 'this portfolio'}. I can tell you about their skills, projects, experience, or education. What would you like to know?`;
+      } 
+      // 2. Custom AI Knowledge Matches
+      else if (knowledgeBase && knowledgeBase.some(k => query.includes(k.topic.toLowerCase()))) {
+        const match = knowledgeBase.find(k => query.includes(k.topic.toLowerCase()));
+        botResponse = match?.description || botResponse;
       }
-
-      const knowledgeContext = knowledgeBase?.map(k => `${k.topic}: ${k.description}`).join("\n") || "";
-      const projectsContext = projects?.length 
-        ? "\nProjects:\n" + projects.map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags?.join(', ')})`).join("\n") 
-        : "";
-      const skillsContext = skills?.length 
-        ? "\nSkills:\n" + skills.map(s => `- ${s.name} (${s.category})`).join("\n") 
-        : "";
-      const experienceContext = experience?.length 
-        ? "\nExperience:\n" + experience.map(e => `- ${e.position} at ${e.company} (${e.start_date} - ${e.current ? 'Present' : e.end_date})`).join("\n") 
-        : "";
-      const educationContext = education?.length
-        ? "\nEducation:\n" + education.map(e => `- ${e.degree} in ${e.field_of_study} at ${e.institution}`).join("\n")
-        : "";
-      const certificationsContext = certifications?.length
-        ? "\nCertifications:\n" + certifications.map(c => `- ${c.name} from ${c.issuer}`).join("\n")
-        : "";
-
-      const systemPrompt = `You are an AI assistant for ${profile.full_name}'s portfolio. 
-      Here is the comprehensive data about ${profile.full_name}:
-      ${knowledgeContext}
-      ${projectsContext}
-      ${skillsContext}
-      ${experienceContext}
-      ${educationContext}
-      ${certificationsContext}
-      IMPORTANT: You must answer in ${LANGUAGES.find(l => l.code === language)?.name || 'English'}.
-      Answer the user's question based on this context. If the answer isn't in the context, politely say you don't know but suggest contacting ${profile.full_name} directly.
-      Keep answers concise, professional, and engaging. Do not output markdown symbols like ** or # in your response as it will be spoken aloud.`;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${profile.gemini_api_key}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }] }]
-        })
-      });
-
-      const data = await response.json();
+      // 3. Skills
+      else if (query.includes("skill") || query.includes("tech") || query.includes("stack") || query.includes("know")) {
+        botResponse = skills?.length 
+          ? `Here are some of the main skills: ${skills.map(s => s.name).slice(0, 8).join(', ')} and more!` 
+          : "I don't have any skills listed yet.";
+      }
+      // 4. Projects
+      else if (query.includes("project") || query.includes("portfolio") || query.includes("work") || query.includes("built")) {
+        botResponse = projects?.length 
+          ? `Some notable projects include: ${projects.map(p => p.title).slice(0, 3).join(', ')}. Check out the portfolio section for details!` 
+          : "I don't have any projects listed yet.";
+      }
+      // 5. Experience
+      else if (query.includes("experience") || query.includes("job") || query.includes("role") || query.includes("company")) {
+        botResponse = experience?.length 
+          ? `Here is recent experience: ${experience.map(e => `${e.position} at ${e.company}`).join('. ')}.` 
+          : "I don't have any work experience listed yet.";
+      }
+      // 6. Education
+      else if (query.includes("education") || query.includes("degree") || query.includes("college") || query.includes("university") || query.includes("school")) {
+        botResponse = education?.length 
+          ? `Education details: ${education.map(e => `${e.degree} from ${e.institution}`).join('. ')}.` 
+          : "I don't have any education details listed yet.";
+      }
+      // 7. Certifications
+      else if (query.includes("cert")) {
+        botResponse = certifications?.length 
+          ? `Certifications include: ${certifications.map(c => c.name).join(', ')}.` 
+          : "I don't have any certifications listed yet.";
+      }
       
-      if (!response.ok || data.error) {
-        throw new Error(data.error?.message || `API returned status ${response.status}`);
-      }
-
-      const botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't generate a response.";
-
       setMessages((prev) => [...prev, { text: botResponse, isBot: true }]);
       speak(botResponse);
-    } catch (error: any) {
-      let errorMessage = "I'm having trouble connecting right now. Please try again later.";
-      if (!profile?.gemini_api_key) {
-        errorMessage = "My AI brain hasn't been configured yet! Please add a Gemini API key in the Admin Settings.";
-      } else if (error.message.includes("API_KEY_INVALID") || error.message.includes("400")) {
-        errorMessage = "The API key seems to be invalid. Please check your Gemini API key in Admin Settings.";
-      } else if (error.message) {
-        errorMessage = `Error: ${error.message}`;
-      }
-      setMessages((prev) => [...prev, { text: errorMessage, isBot: true }]);
-    } finally {
       setIsTyping(false);
-    }
+    }, 600); // Simulate natural typing delay
   };
 
   return (
@@ -235,31 +195,11 @@ export const ChatWidget = () => {
                   </div>
                   <div>
                     <h3 className="font-display font-bold text-white text-lg leading-none mb-1">AI Assistant</h3>
-                    <p className="text-xs text-portfolio-muted font-medium">Online • Powered by Gemini</p>
+                    <p className="text-xs text-portfolio-muted font-medium">Online • Local AI Engine</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-1">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-white/10" title="Select Language">
-                        <Globe className="w-4 h-4 text-portfolio-muted" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-black/90 backdrop-blur-xl border border-white/10 text-white rounded-xl">
-                      {LANGUAGES.map((lang) => (
-                        <DropdownMenuItem
-                          key={lang.code}
-                          onClick={() => setLanguage(lang.code)}
-                          className={`cursor-pointer focus:bg-white/10 rounded-lg ${language === lang.code ? "bg-white/10 text-accent" : ""}`}
-                        >
-                          <span className="mr-2">{lang.native}</span>
-                          <span className="text-xs text-white/50">({lang.name})</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
                   <Button
                     variant="ghost"
                     size="icon"
@@ -344,7 +284,7 @@ export const ChatWidget = () => {
                 </div>
                 <div className="text-center mt-3">
                   <span className="text-[10px] uppercase tracking-widest text-portfolio-muted font-bold">
-                    Powered by Google Gemini
+                    Local Smart Assistant
                   </span>
                 </div>
               </div>

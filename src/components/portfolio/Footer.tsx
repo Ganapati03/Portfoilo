@@ -1,6 +1,8 @@
 import { Github, Linkedin, Twitter, Mail, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useProfile } from "@/integrations/supabase/hooks";
+import Lottie from "lottie-react";
+import catAnimation from "../../../public/cat.json";
 
 export const Footer = () => {
   const { data: profile } = useProfile();
@@ -12,9 +14,22 @@ export const Footer = () => {
   ];
 
   return (
-    <footer className="py-12 border-t border-white/10 bg-background relative overflow-hidden">
-      {/* Decorative Blur */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className="relative w-full">
+      {/* Container for the walking cat, sitting exactly on top of the footer border */}
+      <div className="absolute top-0 left-0 w-full h-[300px] -translate-y-full overflow-hidden pointer-events-none z-20">
+        <motion.div
+          initial={{ x: "-20vw" }}
+          animate={{ x: "100vw" }}
+          transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
+          className="absolute -bottom-[30px] left-0 w-[350px] h-[350px]"
+        >
+          <Lottie animationData={catAnimation} loop={true} />
+        </motion.div>
+      </div>
+
+      <footer className="py-12 border-t border-white/10 bg-background relative overflow-hidden">
+        {/* Decorative Blur */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4">
@@ -77,5 +92,6 @@ export const Footer = () => {
         </div>
       </div>
     </footer>
+    </div>
   );
 };

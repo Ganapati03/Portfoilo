@@ -16,6 +16,9 @@ create table public.profiles (
   twitter_url text,
   gemini_api_key text,
   registration_enabled boolean default false,
+  years_experience integer default 2,
+  projects_delivered integer default 4,
+  technologies_mastered integer default 19,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
