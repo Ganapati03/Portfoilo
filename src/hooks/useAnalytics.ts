@@ -45,8 +45,13 @@ const getOS = (): string => {
   return 'Other';
 };
 
+let globalLastTrackedPath: string | null = null;
+
 export const useAnalytics = (pagePath: string, pageTitle?: string) => {
   useEffect(() => {
+    if (globalLastTrackedPath === pagePath) return;
+    globalLastTrackedPath = pagePath;
+
     const trackPageView = async () => {
       try {
         const sessionId = getSessionId();

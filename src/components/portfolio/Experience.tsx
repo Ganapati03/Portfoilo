@@ -65,10 +65,14 @@ const ExperienceRow = ({ exp, index }: { exp: any; index: number }) => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
-          className="bg-[#111111]/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/5 group-hover:border-white/10 transition-colors duration-300 relative overflow-hidden"
+          className="bg-[#111111]/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/5 group-hover:border-white/10 transition-colors duration-300 relative overflow-hidden group/card"
         >
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+          {/* Flash Sweep Effect */}
+          <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-[25deg] group-hover/card:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none z-0" />
+          
+          <div className="relative z-10">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
             <div className="flex items-center gap-5">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
                 <IconComponent className="w-6 h-6 md:w-7 md:h-7 text-accent" />
@@ -115,6 +119,7 @@ const ExperienceRow = ({ exp, index }: { exp: any; index: number }) => {
             <div className="flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/5 text-white/60 text-xs font-medium">
               +2
             </div>
+          </div>
           </div>
         </motion.div>
       </div>

@@ -2,16 +2,18 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Loader2 } from "lucide-react";
 import { useBlogPostBySlug, useIncrementBlogView } from "@/integrations/supabase/hooks";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: post, isLoading, error } = useBlogPostBySlug(slug || "");
   const incrementView = useIncrementBlogView();
+  const hasIncremented = useRef(false);
 
   useEffect(() => {
-    if (post?.id) {
+    if (post?.id && !hasIncremented.current) {
       incrementView.mutate(post.id);
+      hasIncremented.current = true;
     }
   }, [post?.id]);
 
