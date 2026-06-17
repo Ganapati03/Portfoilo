@@ -63,7 +63,7 @@ export const AdminSidebar = () => {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-white/10 bg-black/40 backdrop-blur-xl">
-      <SidebarContent>
+      <SidebarContent className="overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/20">
         <div className="p-6 border-b border-white/10">
           <h2 className={`font-display font-black tracking-widest uppercase flex items-center justify-center ${state === "collapsed" ? "text-sm" : "text-xl"}`}>
             <span className="text-white">{state === "collapsed" ? "Q" : "Quantum"}</span>
