@@ -86,17 +86,39 @@ export const useAnalytics = (pagePath: string, pageTitle?: string) => {
   }, [pagePath, pageTitle]);
 };
 
+export interface YearlyStats {
+  year: number;
+  totalViews: number;
+  uniqueVisitors: number;
+  avgViewsPerVisitor: number;
+  topPage?: string;
+  monthlyBreakdown: { month: string; monthIndex: number; views: number; visitors: number }[];
+}
+
 // Hook to get analytics data (for admin dashboard)
 export const useAnalyticsData = () => {
-  const getPageViews = async (days: number = 30) => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+  const applyDateFilter = (query: any, days?: number, targetYear?: number) => {
+    if (targetYear) {
+      const startOfYear = new Date(targetYear, 0, 1).toISOString();
+      const endOfYear = new Date(targetYear + 1, 0, 1).toISOString();
+      return query.gte('created_at', startOfYear).lt('created_at', endOfYear);
+    }
+    if (days && days > 0) {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      return query.gte('created_at', startDate.toISOString());
+    }
+    return query; // All-time when days === 0 or undefined
+  };
 
-    const { data, error } = await supabase
+  const getPageViews = async (days: number = 30, targetYear?: number) => {
+    let query = supabase
       .from('analytics')
       .select('*')
-      .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false });
+
+    query = applyDateFilter(query, days, targetYear);
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching analytics:', error);
@@ -106,14 +128,10 @@ export const useAnalyticsData = () => {
     return data;
   };
 
-  const getPageViewsByPath = async (days: number = 30) => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const { data, error } = await supabase
-      .from('analytics')
-      .select('page_path')
-      .gte('created_at', startDate.toISOString());
+  const getPageViewsByPath = async (days: number = 30, targetYear?: number) => {
+    let query = supabase.from('analytics').select('page_path');
+    query = applyDateFilter(query, days, targetYear);
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching analytics:', error);
@@ -131,14 +149,10 @@ export const useAnalyticsData = () => {
       .sort((a, b) => b.count - a.count);
   };
 
-  const getUniqueVisitors = async (days: number = 30) => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const { data, error } = await supabase
-      .from('analytics')
-      .select('session_id')
-      .gte('created_at', startDate.toISOString());
+  const getUniqueVisitors = async (days: number = 30, targetYear?: number) => {
+    let query = supabase.from('analytics').select('session_id');
+    query = applyDateFilter(query, days, targetYear);
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching analytics:', error);
@@ -150,14 +164,10 @@ export const useAnalyticsData = () => {
     return uniqueSessions.size;
   };
 
-  const getDeviceStats = async (days: number = 30) => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const { data, error } = await supabase
-      .from('analytics')
-      .select('device_type')
-      .gte('created_at', startDate.toISOString());
+  const getDeviceStats = async (days: number = 30, targetYear?: number) => {
+    let query = supabase.from('analytics').select('device_type');
+    query = applyDateFilter(query, days, targetYear);
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching analytics:', error);
@@ -173,14 +183,10 @@ export const useAnalyticsData = () => {
     return deviceCounts;
   };
 
-  const getBrowserStats = async (days: number = 30) => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const { data, error } = await supabase
-      .from('analytics')
-      .select('browser')
-      .gte('created_at', startDate.toISOString());
+  const getBrowserStats = async (days: number = 30, targetYear?: number) => {
+    let query = supabase.from('analytics').select('browser');
+    query = applyDateFilter(query, days, targetYear);
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching analytics:', error);
@@ -196,14 +202,10 @@ export const useAnalyticsData = () => {
     return browserCounts;
   };
 
-  const getTotalPageViews = async (days: number = 30) => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const { count, error } = await supabase
-      .from('analytics')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', startDate.toISOString());
+  const getTotalPageViews = async (days: number = 30, targetYear?: number) => {
+    let query = supabase.from('analytics').select('*', { count: 'exact', head: true });
+    query = applyDateFilter(query, days, targetYear);
+    const { count, error } = await query;
 
     if (error) {
       console.error('Error fetching analytics:', error);
@@ -213,6 +215,95 @@ export const useAnalyticsData = () => {
     return count || 0;
   };
 
+  const getYearlyAnalytics = async (): Promise<YearlyStats[]> => {
+    const { data, error } = await supabase
+      .from('analytics')
+      .select('created_at, session_id, page_path')
+      .order('created_at', { ascending: true });
+
+    if (error || !data) {
+      console.error('Error fetching yearly analytics:', error);
+      return [];
+    }
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Group by year
+    const byYear: Record<number, {
+      totalViews: number;
+      sessions: Set<string>;
+      pageCounts: Record<string, number>;
+      months: Record<number, { views: number; sessions: Set<string> }>;
+    }> = {};
+
+    data.forEach((item) => {
+      if (!item.created_at) return;
+      const date = new Date(item.created_at);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+
+      if (!byYear[year]) {
+        byYear[year] = {
+          totalViews: 0,
+          sessions: new Set<string>(),
+          pageCounts: {},
+          months: {},
+        };
+        for (let m = 0; m < 12; m++) {
+          byYear[year].months[m] = { views: 0, sessions: new Set<string>() };
+        }
+      }
+
+      byYear[year].totalViews += 1;
+      if (item.session_id) {
+        byYear[year].sessions.add(item.session_id);
+        byYear[year].months[month].sessions.add(item.session_id);
+      }
+      if (item.page_path) {
+        byYear[year].pageCounts[item.page_path] = (byYear[year].pageCounts[item.page_path] || 0) + 1;
+      }
+      byYear[year].months[month].views += 1;
+    });
+
+    const currentYear = new Date().getFullYear();
+    if (!byYear[currentYear]) {
+      byYear[currentYear] = {
+        totalViews: 0,
+        sessions: new Set<string>(),
+        pageCounts: {},
+        months: {},
+      };
+      for (let m = 0; m < 12; m++) {
+        byYear[currentYear].months[m] = { views: 0, sessions: new Set<string>() };
+      }
+    }
+
+    return Object.entries(byYear).map(([yearStr, val]) => {
+      const year = parseInt(yearStr, 10);
+      const uniqueVisitors = val.sessions.size;
+      const avgViewsPerVisitor = uniqueVisitors > 0 ? Number((val.totalViews / uniqueVisitors).toFixed(1)) : 0;
+      
+      const topPageEntry = Object.entries(val.pageCounts).sort((a, b) => b[1] - a[1])[0];
+      const topPage = topPageEntry ? `${topPageEntry[0]} (${topPageEntry[1]})` : 'N/A';
+
+      const monthlyBreakdown = Object.entries(val.months).map(([mIndex, mVal]) => ({
+        month: monthNames[parseInt(mIndex, 10)],
+        monthIndex: parseInt(mIndex, 10),
+        views: mVal.views,
+        visitors: mVal.sessions.size,
+      }));
+
+      return {
+        year,
+        totalViews: val.totalViews,
+        uniqueVisitors,
+        avgViewsPerVisitor,
+        topPage,
+        monthlyBreakdown,
+      };
+    }).sort((a, b) => b.year - a.year);
+  };
+
   return {
     getPageViews,
     getPageViewsByPath,
@@ -220,5 +311,6 @@ export const useAnalyticsData = () => {
     getDeviceStats,
     getBrowserStats,
     getTotalPageViews,
+    getYearlyAnalytics,
   };
 };

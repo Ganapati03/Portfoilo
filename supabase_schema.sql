@@ -264,3 +264,40 @@ create policy "Authenticated users can delete blog images"
 on storage.objects for delete
 using ( bucket_id = 'blog-images' and auth.role() = 'authenticated' );
 
+-- REVIEWS & RATINGS TABLE (Freelancers, Clients, and Collaborators)
+create table public.reviews (
+  id uuid default uuid_generate_v4() primary key,
+  name text not null,
+  role text, -- e.g. 'Senior Developer', 'Client', 'Product Lead'
+  company text, -- e.g. 'Upwork', 'Fiverr', 'Startup Co'
+  project_name text, -- e.g. 'Quantum UI Dashboard'
+  rating integer not null check (rating >= 1 and rating <= 5),
+  review text not null,
+  email text,
+  avatar_url text,
+  approved boolean default true,
+  featured boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Index for reviews
+create index reviews_created_at_idx on public.reviews(created_at desc);
+create index reviews_rating_idx on public.reviews(rating);
+create index reviews_approved_idx on public.reviews(approved);
+
+-- Enable RLS on reviews table
+alter table public.reviews enable row level security;
+
+-- Reviews policies
+-- Anyone can view approved reviews
+create policy "Public can view approved reviews." on public.reviews for select using (approved = true);
+-- Authenticated users can view all reviews
+create policy "Authenticated users can view all reviews." on public.reviews for select using (auth.role() = 'authenticated');
+-- Anyone can submit a review
+create policy "Anyone can submit a review." on public.reviews for insert with check (true);
+-- Authenticated users can update reviews (approve, feature, edit)
+create policy "Authenticated users can update reviews." on public.reviews for update using (auth.role() = 'authenticated');
+-- Authenticated users can delete reviews
+create policy "Authenticated users can delete reviews." on public.reviews for delete using (auth.role() = 'authenticated');
+
+

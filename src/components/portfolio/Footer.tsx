@@ -82,6 +82,13 @@ export const Footer = () => {
             ))}
             <div className="w-px h-8 bg-white/10 mx-2" />
             <a 
+              href="/rate" 
+              className="font-display font-medium tracking-[0.1em] text-xs uppercase text-portfolio-muted hover:text-accent transition-colors"
+            >
+              Rate Work
+            </a>
+            <div className="w-px h-8 bg-white/10 mx-2" />
+            <a 
               href="/admin" 
               className="font-display font-medium tracking-[0.1em] text-xs uppercase text-portfolio-muted hover:text-accent transition-colors"
             >

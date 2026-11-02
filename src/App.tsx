@@ -22,6 +22,8 @@ import AIKnowledgePage from "./pages/admin/AIKnowledgePage";
 import MessagesPage from "./pages/admin/MessagesPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import Analytics from "./pages/Analytics";
+import RateWork from "./pages/RateWork";
+import ReviewsPage from "./pages/admin/ReviewsPage";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/services" element={<PublicServicesPage />} />
             <Route path="/projects" element={<PublicProjectsPage />} />
+            <Route path="/rate" element={<RateWork />} />
+            <Route path="/reviews" element={<RateWork />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Admin />}>
               <Route index element={<Dashboard />} />
@@ -56,6 +60,7 @@ const App = () => (
               <Route path="ai-knowledge" element={<AIKnowledgePage />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="reviews" element={<ReviewsPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

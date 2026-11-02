@@ -12,6 +12,7 @@ import {
   Brain,
   MessageSquare,
   BarChart3,
+  Star,
   Settings,
   LogOut,
   Globe,
@@ -44,6 +45,7 @@ const menuItems = [
   { title: "AI Knowledge", url: "/admin/ai-knowledge", icon: Brain },
   { title: "Messages", url: "/admin/messages", icon: MessageSquare },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Reviews & Ratings", url: "/admin/reviews", icon: Star },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
